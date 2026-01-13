@@ -1,0 +1,342 @@
+<?php
+session_start();
+require_once __DIR__ . '/config/db_connection.php';
+
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$errors = [];
+$email = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // CSRF check
+    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = "Invalid CSRF token.";
+    }
+
+    // Sanitize input
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+
+    // Validate fields
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Please enter a valid email address.";
+    }
+    if (empty($password)) {
+        $errors[] = "Please enter your password.";
+    }
+
+    // If no errors, check credentials
+    if (empty($errors)) {
+        $stmt = $pdo->prepare("SELECT id, username, email, password, role FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($password, $user['password'])) {
+            // Set session variables
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
+
+            // Redirect based on role
+            if ($user['role'] === 'admin') {
+                header("Location: admin/admin_dashboard_layout.php");
+                exit;
+            } else {
+                header("Location: user/user_dashboard_layout.php");
+                exit;
+            }
+        } else {
+            $errors[] = "Invalid email or password.";
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | HostelPro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --aqua: #00FFF0;
+            --aqua-dark: #11998e;
+            --accent: #f6c23e;
+            --white: #fff;
+            --dark: #233142;
+            --card-shadow: 0 6px 24px rgba(0,255,240,0.09);
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(120deg, var(--aqua) 0%, var(--white) 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: var(--aqua-dark);
+            box-shadow: 0 2px 8px rgba(0,255,240,0.08);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--white) !important;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .nav-link {
+            color: var(--white) !important;
+            font-weight: 500;
+            margin: 0 12px;
+            transition: color 0.3s;
+        }
+        .nav-link:hover, .nav-link:focus {
+            color: var(--aqua) !important;
+        }
+        .login-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container-login {
+            margin-top: 0;
+            display: flex;
+            min-height: 80vh;
+            width: 100%;
+            max-width: 900px;
+            margin: 2rem auto;
+            background: transparent;
+            box-shadow: none;
+            border-radius: 20px;
+            overflow: hidden;
+            gap: 0;
+        }
+        .login-left, .login-right {
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            padding: 2rem 1.5rem;
+        }
+        .login-left {
+            background: var(--white);
+            border-radius: 20px 0 0 20px;
+            box-shadow: var(--card-shadow);
+            min-width: 0;
+            text-align: center;
+        }
+        .login-img {
+            width: 170px;
+            height: 170px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 0 24px var(--aqua-dark);
+            border: 6px solid var(--aqua);
+        }
+        .login-text h2 {
+            font-weight: 700;
+            color: var(--aqua-dark);
+            margin-bottom: 0.5rem;
+        }
+        .login-text p {
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+        .login-right {
+            background: transparent;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0 20px 20px 0;
+        }
+        .card {
+            background: var(--white);
+            color: var(--dark);
+            max-width: 400px;
+            width: 100%;
+            border-radius: 20px;
+            padding: 32px 24px;
+            box-shadow: var(--card-shadow);
+        }
+        .card h3 {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--aqua-dark);
+        }
+        .input-group-text {
+            background: var(--aqua-dark);
+            color: white;
+            border: none;
+            border-radius: 12px 0 0 12px;
+        }
+        .form-control {
+            border-left: none;
+            border-radius: 0 12px 12px 0;
+            box-shadow: none;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+        .form-control:focus {
+            border-color: var(--aqua);
+            box-shadow: 0 0 8px var(--aqua);
+        }
+        .btn-login {
+            background: linear-gradient(90deg, var(--aqua-dark), var(--aqua));
+            color: #fff;
+            border: none;
+            padding: 12px 0;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 14px var(--aqua-dark);
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.4s, color 0.3s, box-shadow 0.3s, transform 0.25s;
+        }
+        .btn-login:hover, .btn-login:focus {
+            background: linear-gradient(90deg, var(--aqua), var(--aqua-dark));
+            color: #fff;
+            transform: scale(1.03);
+            box-shadow: 0 8px 32px 0 var(--aqua), 0 4px 18px var(--accent);
+        }
+        .alert {
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .footer {
+            background: var(--aqua-dark);
+            color: #fff;
+            text-align: center;
+            padding: 18px 0;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: auto;
+            box-shadow: 0 -4px 12px var(--aqua);
+        }
+        .social-links a {
+            color: #fff;
+            margin: 0 8px;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+        .social-links a:hover {
+            color: var(--accent);
+        }
+        @media (max-width: 991.98px) {
+            .container-login {
+                flex-direction: column;
+                max-width: 95vw;
+                min-height: unset;
+            }
+            .login-left, .login-right {
+                border-radius: 20px;
+                margin-bottom: 1.5rem;
+                padding: 2rem 1rem;
+            }
+            .login-left { border-radius: 20px 20px 0 0; }
+            .login-right { border-radius: 0 0 20px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar/Header -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.php">
+                <i class="bi bi-house-door-fill"></i> HostelPro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse d-none d-lg-flex">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="index.php#home"><i class="bi bi-house-door"></i> Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php#about"><i class="bi bi-info-circle"></i> About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php#contact"><i class="bi bi-envelope"></i> Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="register.php"><i class="bi bi-person-plus"></i> Register</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Login Section -->
+    <section class="login-section">
+        <div class="container-login">
+            <!-- Left: Image and Welcome Text -->
+            <div class="login-left">
+                <img src="assets/images/backgrrurru.jpg" alt="Welcome to HostelPro" class="login-img">
+                <div class="login-text">
+                    <h2>Welcome Back!</h2>
+                    <p>Login to manage your hostel bookings, complaints, and more. Admins can manage all hostel operations securely.</p>
+                </div>
+            </div>
+            <!-- Right: Login Form -->
+            <div class="login-right">
+                <div class="card">
+                    <h3><i class="bi bi-box-arrow-in-right"></i> Login</h3>
+                    <?php if (!empty($errors)): ?>
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                <?php foreach ($errors as $err): ?>
+                                    <li><?= htmlspecialchars($err) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+                    <form method="POST" autocomplete="off" novalidate>
+                        <!-- CSRF Token -->
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                        <!-- Email -->
+                        <div class="mb-3 input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" name="email" placeholder="Email"
+                                   value="<?= htmlspecialchars($email) ?>" required>
+                        </div>
+                        <!-- Password -->
+                        <div class="mb-3 input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control" name="password" placeholder="Password"
+                                   required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-login">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        Don't have an account?
+                        <a href="register.php" class="text-decoration-none" style="color: var(--aqua-dark);">Register</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <div>
+            <span>© <?= date('Y') ?> HostelPro. All rights reserved.</span>
+            <span class="social-links ms-3">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-twitter"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+                <a href="#"><i class="bi bi-linkedin"></i></a>
+            </span>
+        </div>
+    </footer>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
