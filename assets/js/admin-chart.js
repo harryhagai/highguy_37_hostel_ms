@@ -7,11 +7,15 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    function initAdminDashboardChart() {
         var canvas = document.getElementById('adminDashboardChart');
         if (!canvas || typeof Chart === 'undefined') {
             return;
         }
+        if (canvas.dataset.chartBound === '1') {
+            return;
+        }
+        canvas.dataset.chartBound = '1';
 
         var labels = parseJSON(canvas.dataset.labels);
         var applications = parseJSON(canvas.dataset.applications);
@@ -92,5 +96,13 @@
                 }
             }
         });
-    });
+    }
+
+    window.initAdminDashboardChart = initAdminDashboardChart;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAdminDashboardChart);
+    } else {
+        initAdminDashboardChart();
+    }
 })();

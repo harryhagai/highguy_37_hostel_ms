@@ -22,6 +22,47 @@ if (siteHeader) {
     window.addEventListener("scroll", syncHeaderState, { passive: true });
 }
 
+// Active state indicator for header nav links
+const headerNavLinks = Array.from(document.querySelectorAll(".header-nav .nav-link[href^='#']"));
+if (headerNavLinks.length > 0) {
+    const sectionTargets = headerNavLinks
+        .map((link) => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+
+    const setActiveLink = (hash) => {
+        headerNavLinks.forEach((link) => {
+            const isActive = link.getAttribute("href") === hash;
+            link.classList.toggle("is-active", isActive);
+            if (isActive) {
+                link.setAttribute("aria-current", "page");
+            } else {
+                link.removeAttribute("aria-current");
+            }
+        });
+    };
+
+    if (sectionTargets.length > 0) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setActiveLink(`#${entry.target.id}`);
+                    }
+                });
+            },
+            {
+                root: null,
+                rootMargin: "-45% 0px -45% 0px",
+                threshold: 0,
+            }
+        );
+
+        sectionTargets.forEach((section) => observer.observe(section));
+    } else {
+        setActiveLink("#home");
+    }
+}
+
 // Hero image slideshow (every 3 seconds by default)
 let heroImage = document.querySelector(".hero-media-image[data-hero-images]");
 if (heroImage) {
@@ -39,7 +80,7 @@ if (heroImage) {
         let isAnimating = false;
 
         const interval = Math.max(parseInt(heroImage.dataset.heroInterval || "3000", 10) || 3000, 1200);
-        const transitionMs = 650;
+        const transitionMs = 900;
 
         window.setInterval(() => {
             if (!heroCard || isAnimating) return;
