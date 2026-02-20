@@ -30,54 +30,8 @@ if (!isset($total_users)) {
 
 
 
-<style>
-/* CSS yako yote hapa */
-.tiles-row {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 2.2rem;
-    flex-wrap: wrap;
-}
-.tile {
-    flex: 1 1 180px;
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 4px 24px rgba(28,202,216,0.08);
-    padding: 1.5rem 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    min-width: 180px;
-}
-.tile-icon {
-    font-size: 2.2rem;
-    color: #11998e;
-    background: #1ccad8;
-    border-radius: 12px;
-    padding: 10px;
-    box-shadow: 0 2px 10px rgba(28,202,216,0.08);
-}
-.tile-content { flex: 1; }
-.tile-label {
-    font-size: 1.05rem;
-    color: #11998e;
-    font-weight: 500;
-    margin-bottom: 2px;
-}
-.tile-value {
-    font-size: 1.55rem;
-    font-weight: 700;
-    color: #233142;
-}
-.dashboard-card {
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 4px 24px rgba(28,202,216,0.08);
-    padding: 2rem 1.5rem;
-    margin-bottom: 1.5rem;
-}
-/* ...ongeza zingine unazotaka... */
-</style>
+
+<link rel="stylesheet" href="../assets/css/admin-dashboard-content.css">
 
 
 
@@ -115,87 +69,15 @@ if (!isset($total_users)) {
 </div>
 <div class="dashboard-card">
     <h5 class="mb-4"><i class="bi bi-graph-up-arrow"></i> Application Management Trends (Last 6 Months)</h5>
-    <canvas id="adminDashboardChart" height="90"></canvas>
+    <canvas
+        id="adminDashboardChart"
+        height="90"
+        data-labels='<?= htmlspecialchars(json_encode($months), ENT_QUOTES, "UTF-8") ?>'
+        data-applications='<?= htmlspecialchars(json_encode($applications), ENT_QUOTES, "UTF-8") ?>'
+        data-approved='<?= htmlspecialchars(json_encode($approved), ENT_QUOTES, "UTF-8") ?>'
+        data-rejected='<?= htmlspecialchars(json_encode($rejected), ENT_QUOTES, "UTF-8") ?>'>
+    </canvas>
 </div>
-<script>
-function loadDashboardChart() {
-    const ctx = document.getElementById('adminDashboardChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: <?= json_encode($months) ?>,
-                datasets: [
-                    {
-                        label: 'Applications',
-                        data: <?= json_encode($applications) ?>,
-                        borderColor: 'rgba(28,202,216,1)',
-                        backgroundColor: 'rgba(28,202,216,0.1)',
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        fill: true
-                    },
-                    {
-                        label: 'Approved',
-                        data: <?= json_encode($approved) ?>,
-                        borderColor: 'rgba(17,153,142,1)',
-                        backgroundColor: 'rgba(17,153,142,0.1)',
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        fill: true
-                    },
-                    {
-                        label: 'Rejected',
-                        data: <?= json_encode($rejected) ?>,
-                        borderColor: 'rgba(246,194,62,1)',
-                        backgroundColor: 'rgba(246,194,62,0.08)',
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            font: {
-                                family: 'Roboto',
-                                weight: 'bold'
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: '#11998e',
-                            font: {
-                                weight: 'bold',
-                                family: 'Roboto'
-                            }
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            color: '#11998e',
-                            font: {
-                                weight: 'bold',
-                                family: 'Roboto'
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-}
-loadDashboardChart();
-</script>
+<script src="../assets/js/admin-chart.js"></script>
+
+

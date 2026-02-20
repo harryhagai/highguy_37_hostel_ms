@@ -31,13 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_photo']) && 
     if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $target)) {
         $profile_pic = $target;
         $pdo->prepare("UPDATE users SET profile_photo=? WHERE id=?")->execute([$profile_pic, $user_id]);
-        if (!headers_sent()) {
-            header("Location: user_dashboard_layout.php?page=profile&success=1");
-            exit;
-        } else {
-            echo "<script>window.location.href='user_dashboard_layout.php?page=profile&success=1';</script>";
-            exit;
-        }
+        header("Location: user_dashboard_layout.php?page=profile&success=1");
+        exit;
     } else {
         $upload_error = "Failed to upload image. Please try again.";
     }
@@ -55,120 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_photo']) && 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --aqua: #1ccad8;
-            --aqua-dark: #11998e;
-            --accent: #f6c23e;
-            --white: #fff;
-            --dark: #233142;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f8f9fc;
-            min-height: 100vh;
-            color: var(--dark);
-        }
-        .profile-card {
-            background: var(--white);
-            border-radius: 18px;
-            box-shadow: 0 4px 32px rgba(28,202,216,0.12);
-            border: none;
-            margin-top: 40px;
-        }
-        .profile-card .card-header {
-            background: linear-gradient(120deg, var(--aqua-dark) 60%, var(--aqua) 100%);
-            color: #fff;
-            border-top-left-radius: 18px;
-            border-top-right-radius: 18px;
-            padding: 1.5rem 2rem;
-            text-align: center;
-        }
-        .profile-avatar {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid var(--accent);
-            box-shadow: 0 2px 12px rgba(28,202,216,0.13);
-            margin-bottom: 1.5rem;
-        }
-        .profile-left {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            border-right: 2px solid #f0f0f0;
-            min-height: 100%;
-            padding-top: 1.5rem;
-            padding-bottom: 1.5rem;
-        }
-        .profile-details {
-            padding: 2rem 2rem 2rem 2rem;
-        }
-        .profile-info-label {
-            font-weight: 500;
-            color: var(--aqua-dark);
-        }
-        .profile-info-value {
-            font-size: 1.08rem;
-            color: var(--dark);
-            margin-bottom: 1rem;
-        }
-        .form-label {
-            font-weight: 500;
-            color: var(--aqua-dark);
-        }
-        .form-control:focus {
-            border-color: var(--aqua);
-            box-shadow: 0 0 0 0.2rem rgba(28,202,216,0.10);
-        }
-        .btn-success {
-            background: var(--aqua-dark);
-            border: none;
-            font-weight: 600;
-        }
-        .btn-success:hover {
-            background: var(--aqua);
-        }
-        .btn-secondary {
-            background: var(--accent);
-            border: none;
-            color: var(--dark);
-            font-weight: 600;
-        }
-        .btn-secondary:hover {
-            background: #ffe082;
-            color: var(--dark);
-        }
-        .alert-success {
-            background: var(--aqua);
-            color: #fff;
-            border: none;
-        }
-        .alert-danger {
-            background: #ffb3b3;
-            color: #b71c1c;
-            border: none;
-        }
-        @media (max-width: 991.98px) {
-            .profile-card .row {
-                flex-direction: column;
-            }
-            .profile-left {
-                border-right: none;
-                border-bottom: 2px solid #f0f0f0;
-                padding-bottom: 1rem;
-                margin-bottom: 1rem;
-            }
-            .profile-details {
-                padding: 1.5rem 1rem;
-            }
-        }
-    </style>
+    
+    <link rel="stylesheet" href="../assets/css/user-profile.css">
 </head>
 <body>
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+<div class="container d-flex justify-content-center align-items-center profile-page-container">
     <div class="col-lg-9 col-md-11">
         <div class="card profile-card shadow">
             <div class="card-header">
@@ -189,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_photo']) && 
                         <div class="mb-3 w-100">
                             <label class="form-label text-center w-100">Change Photo</label>
                             <form method="post" enctype="multipart/form-data" id="photoForm">
-                                <input type="file" class="form-control" name="profile_photo" accept="image/*" onchange="document.getElementById('photoForm').submit();">
+                                <input type="file" class="form-control" id="profilePhotoInput" name="profile_photo" accept="image/*">
                             </form>
                         </div>
                     </div>
@@ -216,5 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_photo']) && 
 </div>
 <!-- Bootstrap 5 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/user-profile.js"></script>
 </body>
 </html>
+

@@ -60,6 +60,15 @@
             var form = event.target;
             if (!(form instanceof HTMLFormElement)) return;
 
+            var confirmMessage = form.getAttribute("data-confirm");
+            if (confirmMessage) {
+                var accepted = window.confirm(confirmMessage);
+                if (!accepted) {
+                    event.preventDefault();
+                    return;
+                }
+            }
+
             var submitter = event.submitter;
             if (!submitter) {
                 submitter = form.querySelector('button[type="submit"], input[type="submit"]');

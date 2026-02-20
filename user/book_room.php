@@ -95,7 +95,9 @@ if ($rooms) {
 }
 ?>
 
-<h2 class="mb-4 fw-bold" style="color:#11998e;">
+<link rel="stylesheet" href="../assets/css/user-book-room.css">
+
+<h2 class="mb-4 fw-bold section-title-aqua">
     <i class="bi bi-building"></i> Hostel: <?= htmlspecialchars($hostel['name']) ?>
 </h2>
 
@@ -196,117 +198,9 @@ if ($rooms) {
   </div>
 </div>
 
-<script>
-    const bookRoomModal = document.getElementById('bookRoomModal');
-    if (bookRoomModal) {
-        bookRoomModal.addEventListener('show.bs.modal', event => {
-            const button = event.relatedTarget;
-            const roomId = button.getAttribute('data-room-id');
-            const roomNumber = button.getAttribute('data-room-number');
-            const roomPrice = button.getAttribute('data-room-price');
 
-            document.getElementById('modalRoomId').value = roomId;
-            document.getElementById('modalRoomNumber').value = roomNumber;
-            document.getElementById('modalRoomPrice').value = "$" + roomPrice;
-        });
-    }
-</script>
-<style>
-.room-card-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 28px;
-    margin-bottom: 2rem;
-}
-.room-card {
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 6px 32px rgba(28, 202, 216, 0.10), 0 1.5px 8px rgba(35,49,66,0.08);
-    transition: box-shadow 0.3s, transform 0.2s;
-    border: none;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 320px;
-    padding: 0;
-}
-.room-card:hover {
-    box-shadow: 0 12px 36px rgba(28, 202, 216, 0.16), 0 3px 16px rgba(35,49,66,0.12);
-    transform: translateY(-4px) scale(1.025);
-}
-.room-card .card-body {
-    padding: 1.6rem 1.3rem 1.2rem 1.3rem;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-.room-card .card-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #11998e;
-    margin-bottom: 0.4rem;
-}
-.card-text {
-    color: #233142;
-    font-size: 1.05rem;
-}
-.card-price {
-    font-size: 1.18rem;
-    font-weight: 600;
-    color: #1ccad8;
-    margin-bottom: 0.7rem;
-}
-.card-availability .badge {
-    font-size: 0.98rem;
-    padding: 0.5em 1em;
-    border-radius: 8px;
-}
-.book-room-btn {
-    background: linear-gradient(90deg, #1ccad8 70%, #11998e 100%);
-    border: none;
-    color: #fff;
-    font-weight: 600;
-    font-size: 1.08rem;
-    transition: background 0.22s, box-shadow 0.22s;
-    box-shadow: 0 2px 8px rgba(28,202,216,0.10);
-    border-radius: 8px;
-}
-.book-room-btn:hover, .book-room-btn:focus {
-    background: linear-gradient(90deg, #11998e 60%, #1ccad8 100%);
-    box-shadow: 0 4px 18px rgba(28,202,216,0.16);
-    color: #fff;
-}
-.btn-secondary {
-    border-radius: 8px;
-}
-@media (max-width: 900px) {
-    .room-card-list {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-@media (max-width: 600px) {
-    .room-card-list {
-        grid-template-columns: 1fr;
-    }
-    .room-card {
-        min-height: 250px;
-    }
-}
-#bookRoomModal .modal-content {
-    border-radius: 16px;
-    border: none;
-    box-shadow: 0 8px 32px rgba(28,202,216,0.13);
-}
-#bookRoomModal .modal-title {
-    color: #11998e;
-    font-weight: 700;
-}
-#bookRoomModal .btn-success {
-    background: linear-gradient(90deg, #1ccad8 70%, #11998e 100%);
-    border: none;
-    font-weight: 600;
-}
-#bookRoomModal .btn-success:hover {
-    background: linear-gradient(90deg, #11998e 60%, #1ccad8 100%);
-}
-</style>
+<script src="../assets/js/user-book-room.js"></script>
+
+
+
+

@@ -106,293 +106,8 @@ $control_number = "991234567890";
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --aqua: #1ccad8;
-            --aqua-dark: #11998e;
-            --accent: #f6c23e;
-            --white: #fff;
-            --dark: #233142;
-            --sidebar-width: 240px;
-            --header-height: 70px;
-            --footer-height: 48px;
-        }
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: #f8f9fc;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            color: var(--dark);
-            min-height: 100vh;
-            width: 100vw;
-        }
-        .dashboard-wrapper {
-            min-height: 100vh;
-            width: 100vw;
-            background: #f8f9fc;
-        }
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: linear-gradient(120deg, var(--aqua-dark) 60%, var(--aqua) 100%);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 100;
-            box-shadow: 2px 0 12px rgba(28, 202, 216, 0.07);
-        }
-        .sidebar .profile {
-            width: 100%;
-            padding: 2rem 0 1rem 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .sidebar .profile-pic {
-            width: 78px;
-            height: 78px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--accent);
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.09);
-            margin-bottom: 0.7rem;
-        }
-        .sidebar .profile-name {
-            font-weight: 600;
-            font-size: 1.12rem;
-            color: #fff;
-            margin-bottom: 0.5rem;
-        }
-        .sidebar .sidebar-menu {
-            width: 100%;
-            margin-top: 2rem;
-        }
-        .sidebar .sidebar-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .sidebar .sidebar-menu li {
-            width: 100%;
-        }
-        .sidebar .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 14px 32px;
-            color: #fff;
-            font-size: 1.1rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: background 0.22s, color 0.22s;
-            border-left: 4px solid transparent;
-        }
-        .sidebar .sidebar-menu a.active,
-        .sidebar .sidebar-menu a:hover {
-            background: rgba(255, 255, 255, 0.09);
-            color: var(--accent);
-            border-left: 4px solid var(--accent);
-        }
-        /* Main Content + Right Sidebar Layout */
-        .main-content-row {
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        .main-content {
-            flex: 1 1 0;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .dashboard-header {
-            background: var(--white);
-            box-shadow: 0 2px 8px rgba(28, 202, 216, 0.07);
-            padding: 1.1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: var(--header-height);
-            min-height: var(--header-height);
-            max-height: var(--header-height);
-            position: sticky;
-            top: 0;
-            z-index: 101;
-        }
-        .header-title {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: var(--aqua-dark);
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .user-menu .user-name {
-            font-weight: 600;
-            color: var(--aqua-dark);
-        }
-        .user-menu .dropdown-toggle::after {
-            display: none;
-        }
-        .dashboard-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2.2rem 2rem 2rem 2rem;
-            background: #f8f9fc;
-            min-height: 0;
-        }
-        .dashboard-footer {
-            background: #f8f9fc;
-            color: #233142;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: var(--footer-height);
-            min-height: var(--footer-height);
-            max-height: var(--footer-height);
-            box-shadow: 0 -2px 8px rgba(28, 202, 216, 0.07);
-            font-size: 1rem;
-            position: sticky;
-            bottom: 0;
-            z-index: 101;
-        }
-        .dashboard-card {
-            background: var(--white);
-            border-radius: 14px;
-            box-shadow: 0 4px 24px rgba(28, 202, 216, 0.08);
-            padding: 2rem 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        /* Stat cards */
-        .stat-card {
-            background: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(28, 202, 216, 0.08);
-            padding: 1.5rem 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            min-width: 160px;
-            text-align: center;
-        }
-        .stat-icon {
-            font-size: 2.2rem;
-            color: var(--aqua-dark);
-            background: var(--aqua);
-            border-radius: 12px;
-            padding: 10px;
-        }
-        .stat-label {
-            font-size: 1.05rem;
-            color: var(--aqua-dark);
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-        .stat-value {
-            font-size: 1.55rem;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        .quick-actions .btn {
-            min-width: 180px;
-            margin-bottom: 10px;
-        }
-        /* Payment Section (Right Sidebar) */
-        .right-sidebar {
-            width: 340px;
-            min-width: 280px;
-            max-width: 100vw;
-            background: #fff;
-            border-left: 1px solid #e0e0e0;
-            box-shadow: -2px 0 12px rgba(28,202,216,0.04);
-            padding: 2rem 1.2rem 1.2rem 1.2rem;
-            height: 100vh;
-            position: sticky;
-            top: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .right-sidebar .payment-section h6 {
-            font-weight: 700;
-            font-size: 1.03rem;
-            margin-bottom: 0.7rem;
-            color: #11998e;
-        }
-        .right-sidebar .payment-logos {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 7px;
-            margin-bottom: 0.6rem;
-        }
-        .right-sidebar .payment-logos img {
-            height: 36px;
-            filter: grayscale(0.2);
-            background: #f8f9fc;
-            border-radius: 6px;
-            padding: 2px 4px;
-            transition: filter 0.2s;
-        }
-        .right-sidebar .payment-logos img:hover {
-            filter: grayscale(0);
-        }
-        .right-sidebar .control-number {
-            font-size: 1.12rem;
-            color: #11998e;
-            font-weight: 600;
-            letter-spacing: 1px;
-            margin-bottom: 0.2rem;
-        }
-        .right-sidebar .payment-section .alert {
-            padding: 0.4rem 0.7rem;
-            font-size: 0.97rem;
-            margin-bottom: 0.4rem;
-        }
-        .right-sidebar .payment-section .admin-phone {
-            color: #f6c23e;
-            font-weight: 600;
-            font-size: 1.03rem;
-        }
-        @media (max-width: 991.98px) {
-            .right-sidebar {
-                width: 100%;
-                min-width: 0;
-                position: static;
-                border-left: none;
-                box-shadow: none;
-                margin-top: 2rem;
-                height: auto;
-            }
-            .main-content-row {
-                flex-direction: column;
-                margin-left: 0;
-            }
-            .main-content {
-                width: 100%;
-                margin-left: 0;
-            }
-        }
-    </style>
+    
+    <link rel="stylesheet" href="../assets/css/user-dashboard-layout.css">
 </head>
 <body>
     <div class="dashboard-wrapper">
@@ -423,7 +138,7 @@ $control_number = "991234567890";
                         <i class="bi bi-house-door-fill"></i> HostelPro User Dashboard
                     </div>
                     <div class="user-menu dropdown">
-                        <img src="<?= htmlspecialchars($profile_pic) ?>" alt="Profile" class="profile-pic" style="width:38px; height:38px; object-fit:cover;">
+                        <img src="<?= htmlspecialchars($profile_pic) ?>" alt="Profile" class="profile-pic header-user-pic">
                         <span class="user-name"><?= htmlspecialchars($username) ?></span>
                         <a href="#" class="dropdown-toggle" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-caret-down-fill"></i>
@@ -520,7 +235,7 @@ $control_number = "991234567890";
                         <img src="../assets/images/airtelmoney.png" alt="Airtel Money" title="Airtel Money">
                     </div>
                     <div class="mb-1">
-                        <span style="font-weight:600;">Control Number:</span>
+                        <span class="payment-label">Control Number:</span>
                         <div class="control-number"><?= htmlspecialchars($control_number) ?></div>
                     </div>
                     <div class="alert alert-warning mt-2 mb-2 p-2">
@@ -528,9 +243,9 @@ $control_number = "991234567890";
                         Baada ya malipo, piga admin kuthibitisha:
                         <div class="admin-phone">+255 764 384 905</div>
                     </div>
-                    <div class="mb-1" style="font-size:0.96em;">
+                    <div class="mb-1 payment-help-text">
                         <b>Jinsi ya Kulipa:</b>
-                        <ul style="padding-left:18px; margin-bottom:0;">
+                        <ul class="payment-steps">
                             <li>M-Pesa: *150*00#</li>
                             <li>Tigo Pesa: *150*01#</li>
                             <li>Airtel Money: *150*60#</li>
@@ -547,3 +262,5 @@ $control_number = "991234567890";
     <script src="../assets/js/ui-spinner.js"></script>
 </body>
 </html>
+
+

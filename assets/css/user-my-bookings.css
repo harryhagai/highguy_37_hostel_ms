@@ -1,0 +1,95 @@
+.booking-tile-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 28px;
+    margin-bottom: 2rem;
+}
+.booking-tile {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(28, 202, 216, 0.09);
+    padding: 1.5rem 1.3rem 1.2rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+    position: relative;
+    transition: box-shadow 0.22s, transform 0.18s;
+}
+.booking-tile:hover {
+    box-shadow: 0 8px 36px rgba(28, 202, 216, 0.15);
+    transform: translateY(-2px) scale(1.015);
+}
+.tile-header {
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: #11998e;
+}
+.tile-icon {
+    font-size: 2.1rem;
+    color: #1ccad8;
+}
+.tile-hostel {
+    font-size: 1.11rem;
+    font-weight: 600;
+    color: #11998e;
+}
+.tile-room {
+    font-size: 1.01rem;
+    color: #233142;
+}
+.tile-body {
+    margin-top: 0.2rem;
+    margin-bottom: 0.3rem;
+    font-size: 1.02rem;
+    color: #233142;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.tile-date {
+    font-size: 0.99rem;
+    color: #666;
+}
+.tile-status {
+    font-size: 0.98rem;
+    padding: 0.5em 1em;
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+.tile-actions {
+    margin-top: auto;
+}
+.tile-delete-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    background: linear-gradient(90deg, #ff5858 70%, #f09819 100%);
+    border: none;
+    color: #fff;
+    transition: background 0.19s;
+}
+.tile-delete-btn:hover {
+    background: linear-gradient(90deg, #f09819 70%, #ff5858 100%);
+    color: #fff;
+}
+@media (max-width: 900px) {
+    .booking-tile-list {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 600px) {
+    .booking-tile-list {
+        grid-template-columns: 1fr;
+    }
+    .booking-tile {
+        min-height: 150px;
+    }
+}
+
+.section-title-aqua {
+    color: #11998e;
+}
+
+.inline-form {
+    display: inline;
+}

@@ -1,0 +1,670 @@
+<?php
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HostelPro Student Hostel Finder</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="assets/css/index.css">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg fixed-top site-header">
+        <div class="container">
+            <a class="navbar-brand header-brand" href="#home">
+                <span class="header-brand-icon">
+                    <i class="bi bi-buildings-fill"></i>
+                </span>
+                <span class="header-brand-text">
+                    <strong>HostelPro</strong>
+                    <small>Student Hostel Finder</small>
+                </span>
+            </a>
+            <button
+                class="navbar-toggler header-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto header-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">
+                            <i class="bi bi-house-door nav-link-icon" aria-hidden="true"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">
+                            <i class="bi bi-info-circle nav-link-icon" aria-hidden="true"></i>
+                            <span>About</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">
+                            <i class="bi bi-envelope-paper nav-link-icon" aria-hidden="true"></i>
+                            <span>Contact</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0">
+                    <a class="btn btn-header-outline" href="login.php"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a>
+                    <a class="btn btn-header-solid" href="register.php"><i class="bi bi-person-plus me-1"></i> Create Account</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="home">
+        <div class="hero-orb hero-orb-one" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb-two" aria-hidden="true"></div>
+        <div class="container hero-content">
+            <div class="row g-4 g-lg-5 align-items-center hero-grid">
+                <div class="col-lg-6">
+                    <span class="hero-eyebrow">Efficient & Reliable</span>
+                    <h1 class="hero-heading mt-3 mb-3">
+                        Find Your Ideal Student
+                        <span class="hero-heading-accent">Hostel Faster.</span>
+                    </h1>
+                    <p class="hero-description mb-4">
+                        Compare hostels, view key details, and start booking with confidence from one clean student-friendly platform.
+                    </p>
+                    <div class="hero-actions d-flex flex-wrap gap-3">
+                        <a href="register.php" class="btn btn-hero-primary">
+                            <i class="bi bi-rocket-takeoff me-2"></i>Get Started
+                        </a>
+                        <a href="#about" class="btn btn-hero-secondary">
+                            <i class="bi bi-info-circle me-2"></i>Learn More
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 d-none d-lg-block">
+                    <div class="hero-media-wrap">
+                        <div class="hero-media-card">
+                            <img src="assets/images/bg1111.jpg" alt="Student hostel view" class="hero-media-image">
+                        </div>
+                        <div class="hero-stat-card">
+                            <span class="hero-stat-icon">
+                                <i class="bi bi-check2-circle"></i>
+                            </span>
+                            <div>
+                                <p class="hero-stat-title mb-0">Verified Listings</p>
+                                <small class="hero-stat-subtitle">Availability updated regularly</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section class="py-5" id="about">
+        <div class="container">
+            <h2 class="section-title">About Our System</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="feature-box">
+                        <i class="bi bi-person-badge feature-icon"></i>
+                        <h4>User Functionality</h4>
+                        <ul class="text-start mt-3">
+                            <li>Register and log in to the system</li>
+                            <li>Manage personal profile and change password</li>
+                            <li>Book hostel rooms and view booking details</li>
+                            <li>Lodge complaints and check complaint status</li>
+                            <li>Give feedback on hostel services</li>
+                            <li>View last login details and notifications</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-box">
+                        <i class="bi bi-person-gear feature-icon"></i>
+                        <h4>Admin Functionality</h4>
+                        <ul class="text-start mt-3">
+                            <li>Admin login and profile management</li>
+                            <li>Add, edit, and delete courses and rooms</li>
+                            <li>Register students and manage student profiles</li>
+                            <li>Assign rooms and manage fees</li>
+                            <li>View and manage complaints and feedback</li>
+                            <li>View access logs and generate reports</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-5 bg-light" id="contact">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card contact-card h-100">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-geo-alt-fill feature-icon"></i>
+                                    <h4>Our Location</h4>
+                                    <p>123 Hostel Street, Campus Town<br>Nairobi, Kenya</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card contact-card h-100">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-telephone-fill feature-icon"></i>
+                                    <h4>Call Us</h4>
+                                    <p>+254 700 123456<br>+254 720 654321</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card contact-card h-100">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-envelope-fill feature-icon"></i>
+                                    <h4>Email Us</h4>
+                                    <p>info@hostelpro.com<br>support@hostelpro.com</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card contact-card h-100">
+                                <div class="card-body text-center p-4">
+                                    <i class="bi bi-clock-fill feature-icon"></i>
+                                    <h4>Working Hours</h4>
+                                    <p>Monday - Friday: 8:00 - 17:00<br>Saturday: 9:00 - 14:00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center">
+        <div class="container">
+            <div class="mb-3">
+                <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="social-icon"><i class="bi bi-twitter"></i></a>
+                <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+                <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
+            </div>
+            <p class="mb-0">&copy; <?php echo date('Y'); ?> HostelPro Student Hostel Finder. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/ui-spinner.js"></script>
+    
+    <script src="assets/js/index.js"></script>
+</body>
+</html>
+
+
+
+
+:root {
+            --aqua: #1ccad8;
+            --aqua-dark: #11998e;
+            --accent: #f6c23e;
+            --primary: #1ccad8;
+            --secondary: #11998e;
+            --white: #fff;
+            --dark: #233142;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fc;
+            color: var(--dark);
+        }
+        .site-header {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(17, 153, 142, 0.12);
+            backdrop-filter: blur(10px);
+            transition: background 0.25s ease, box-shadow 0.25s ease;
+        }
+        .site-header.is-scrolled {
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(35, 49, 66, 0.08);
+        }
+        .header-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+        .header-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #fff;
+            background: linear-gradient(140deg, var(--aqua-dark), var(--aqua));
+            box-shadow: 0 8px 18px rgba(17, 153, 142, 0.26);
+        }
+        .header-brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+        .header-brand-text strong {
+            color: var(--aqua-dark);
+            font-size: 1.16rem;
+            letter-spacing: 0.2px;
+        }
+        .header-brand-text small {
+            color: #617384;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .header-nav .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: var(--dark) !important;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.5rem 0.85rem !important;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+        .nav-link-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: var(--aqua-dark);
+            background: rgba(17, 153, 142, 0.12);
+            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+        .header-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            left: 0.85rem;
+            right: 0.85rem;
+            bottom: 0.2rem;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--aqua-dark);
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 0.2s ease;
+        }
+        .header-nav .nav-link:hover,
+        .header-nav .nav-link:focus {
+            color: var(--aqua-dark) !important;
+        }
+        .header-nav .nav-link:hover .nav-link-icon,
+        .header-nav .nav-link:focus .nav-link-icon {
+            background: rgba(28, 202, 216, 0.22);
+            color: var(--aqua-dark);
+            transform: translateY(-1px);
+        }
+        .header-nav .nav-link:hover::after,
+        .header-nav .nav-link:focus::after {
+            transform: scaleX(1);
+        }
+        .btn-header-outline,
+        .btn-header-solid {
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.5rem 0.95rem;
+            white-space: nowrap;
+        }
+        .btn-header-outline {
+            border: 1px solid var(--aqua-dark);
+            color: var(--aqua-dark);
+            background: #fff;
+        }
+        .btn-header-outline:hover,
+        .btn-header-outline:focus {
+            background: #e9fcfc;
+            color: var(--aqua-dark);
+            border-color: var(--aqua-dark);
+        }
+        .btn-header-solid {
+            border: 1px solid var(--aqua-dark);
+            background: var(--aqua-dark);
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(17, 153, 142, 0.24);
+        }
+        .btn-header-solid:hover,
+        .btn-header-solid:focus {
+            background: var(--aqua);
+            border-color: var(--aqua);
+            color: #fff;
+        }
+        .header-toggler {
+            border: 1px solid rgba(17, 153, 142, 0.25);
+            border-radius: 10px;
+            padding: 0.35rem 0.5rem;
+        }
+        .header-toggler:focus {
+            box-shadow: 0 0 0 0.2rem rgba(28, 202, 216, 0.2);
+        }
+        .btn-success {
+            background: var(--accent);
+            color: var(--dark);
+            border: none;
+            font-weight: 600;
+            border-radius: 25px;
+            padding: 10px 28px;
+            transition: background 0.3s, color 0.3s, transform 0.3s;
+        }
+        .btn-success:hover {
+            background: #ffe082;
+            color: var(--aqua-dark);
+            transform: translateY(-2px) scale(1.05);
+        }
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            padding: 145px 0 92px;
+            margin-bottom: 56px;
+            background: linear-gradient(180deg, #ffffff 0%, #f3fbfc 100%);
+            overflow: hidden;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        .hero-grid {
+            min-height: calc(100vh - 220px);
+        }
+        .hero-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(1px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .hero-orb-one {
+            width: 320px;
+            height: 320px;
+            top: -80px;
+            right: -90px;
+            background: rgba(28, 202, 216, 0.22);
+        }
+        .hero-orb-two {
+            width: 240px;
+            height: 240px;
+            bottom: -80px;
+            left: -70px;
+            background: rgba(246, 194, 62, 0.16);
+        }
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(28, 202, 216, 0.15);
+            color: var(--aqua-dark);
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .hero-heading {
+            font-size: clamp(2rem, 4.4vw, 3.55rem);
+            line-height: 1.08;
+            font-weight: 800;
+            color: #1f2a37;
+            max-width: 14ch;
+        }
+        .hero-heading-accent {
+            color: var(--aqua-dark);
+        }
+        .hero-description {
+            color: #56687a;
+            font-size: 1.06rem;
+            max-width: 44ch;
+        }
+        .hero-actions .btn {
+            border-radius: 999px;
+            padding: 0.72rem 1.35rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-width: 1px;
+        }
+        .btn-hero-primary {
+            background: var(--aqua-dark);
+            color: #fff;
+            border-color: var(--aqua-dark);
+            box-shadow: 0 12px 24px rgba(17, 153, 142, 0.22);
+        }
+        .btn-hero-primary:hover,
+        .btn-hero-primary:focus {
+            background: var(--aqua);
+            color: #fff;
+            border-color: var(--aqua);
+        }
+        .btn-hero-secondary {
+            background: #fff;
+            color: #37475a;
+            border-color: #d4dde6;
+        }
+        .btn-hero-secondary:hover,
+        .btn-hero-secondary:focus {
+            background: #f8fbff;
+            color: var(--aqua-dark);
+            border-color: var(--aqua-dark);
+        }
+        .hero-media-wrap {
+            position: relative;
+            max-width: 530px;
+            margin-left: auto;
+        }
+        .hero-media-card {
+            border-radius: 22px;
+            overflow: hidden;
+            border: 8px solid #fff;
+            box-shadow: 0 24px 48px rgba(35, 49, 66, 0.18);
+            background: #fff;
+        }
+        .hero-media-image {
+            width: 100%;
+            height: 430px;
+            object-fit: cover;
+            display: block;
+        }
+        .hero-stat-card {
+            position: absolute;
+            left: -24px;
+            bottom: -22px;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: #fff;
+            border: 1px solid #e3edf2;
+            border-radius: 14px;
+            padding: 0.8rem 0.95rem;
+            box-shadow: 0 12px 26px rgba(35, 49, 66, 0.13);
+        }
+        .hero-stat-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: #d6f7ea;
+            color: #0d9f66;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .hero-stat-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #1f2a37;
+            line-height: 1.1;
+        }
+        .hero-stat-subtitle {
+            color: #6d7f90;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        @keyframes iconPop {
+            0% { transform: scale(0.7);}
+            80% { transform: scale(1.2);}
+            100% { transform: scale(1);}
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        /* About Section */
+        .section-title {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 38px;
+            text-align: center;
+            color: var(--aqua-dark);
+            position: relative;
+            letter-spacing: 1px;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 72px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            margin: 18px auto 0;
+            opacity: 0.7;
+            animation: fadeInUp 1s 0.2s backwards;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--aqua);
+            margin-bottom: 18px;
+            transition: transform 0.3s, color 0.3s;
+            animation: iconPop 1.2s;
+        }
+        .feature-box {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(28,202,216,0.09);
+            padding: 36px 20px 30px;
+            margin-bottom: 24px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-align: center;
+        }
+        .feature-box:hover .feature-icon {
+            color: var(--aqua-dark);
+            transform: scale(1.15) rotate(-8deg);
+        }
+        .feature-box:hover {
+            transform: translateY(-10px) scale(1.025);
+            box-shadow: 0 12px 32px rgba(28,202,216,0.13);
+        }
+        /* Contact Cards */
+        .contact-card {
+            background: var(--white);
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(28,202,216,0.10);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 18px;
+        }
+        .contact-card:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 12px 32px rgba(28,202,216,0.16);
+        }
+        /* Footer */
+        footer {
+            background: var(--aqua-dark);
+            color: var(--white);
+            padding: 32px 0 18px;
+            margin-top: 60px;
+            border-radius: 24px 24px 0 0;
+        }
+        .social-icon {
+            color: var(--white);
+            font-size: 1.4rem;
+            margin: 0 12px;
+            transition: color 0.3s, transform 0.3s;
+            display: inline-block;
+        }
+        .social-icon:hover {
+            color: var(--accent);
+            transform: scale(1.18) rotate(-7deg);
+        }
+        @media (max-width: 991.98px) {
+            .site-header .navbar-collapse {
+                background: #fff;
+                border: 1px solid rgba(17, 153, 142, 0.16);
+                border-radius: 14px;
+                box-shadow: 0 16px 36px rgba(35, 49, 66, 0.1);
+                padding: 0.9rem;
+                margin-top: 0.8rem;
+            }
+            .header-nav .nav-link {
+                padding-left: 0.45rem !important;
+                padding-right: 0.45rem !important;
+                justify-content: flex-start;
+            }
+            .header-nav .nav-link::after {
+                left: 0.45rem;
+                right: 0.45rem;
+                bottom: 0.05rem;
+            }
+            .hero-section {
+                padding: 124px 0 72px;
+            }
+            .hero-grid {
+                min-height: auto;
+            }
+            .hero-heading {
+                max-width: 18ch;
+            }
+            .hero-description {
+                max-width: 50ch;
+            }
+        }
+        @media (max-width: 767px) {
+            .section-title { font-size: 1.2rem;}
+            .hero-section { padding: 108px 0 54px;}
+            .hero-heading {
+                font-size: 2.05rem;
+                max-width: 100%;
+            }
+            .hero-description {
+                font-size: 0.98rem;
+            }
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+

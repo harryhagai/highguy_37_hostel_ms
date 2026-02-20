@@ -163,7 +163,7 @@ try {
                             <button type="button" class="btn btn-sm btn-warning edit-bed-btn" data-bed="<?= $json ?>" data-bs-toggle="modal" data-bs-target="#editBedModal">
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
-                            <form method="post" onsubmit="return confirm('Delete this bed?');" class="d-inline">
+                            <form method="post" data-confirm="Delete this bed?" class="d-inline">
                                 <input type="hidden" name="action" value="delete_bed">
                                 <input type="hidden" name="id" value="<?= (int)$bed['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -289,48 +289,9 @@ try {
     </div>
 </div>
 
-<script>
-(function () {
-    function fillBedEdit(bed) {
-        document.getElementById('editBedId').value = bed.id ?? '';
-        document.getElementById('editBedRoom').value = bed.room_id ?? '';
-        document.getElementById('editBedNumber').value = bed.bed_number ?? '';
-        document.getElementById('editBedStatus').value = bed.status ?? 'active';
-    }
-
-    function fillBedView(bed) {
-        document.getElementById('viewBedId').textContent = bed.id ?? '-';
-        document.getElementById('viewBedHostel').textContent = bed.hostel_name ?? '-';
-        document.getElementById('viewBedRoom').textContent = bed.room_number ?? '-';
-        document.getElementById('viewBedNumber').textContent = bed.bed_number ?? '-';
-        document.getElementById('viewBedStatus').textContent = bed.status ?? '-';
-        document.getElementById('viewBedCreated').textContent = bed.created_at ?? '-';
-    }
-
-    document.querySelectorAll('.edit-bed-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillBedEdit(JSON.parse(this.dataset.bed));
-        });
-    });
-
-    document.querySelectorAll('.view-bed-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillBedView(JSON.parse(this.dataset.bed));
-        });
-    });
-
-    var openModal = <?= json_encode($openModal) ?>;
-    var editFormData = <?= json_encode($editFormData) ?>;
-
-    if (openModal === 'editBedModal' && editFormData) {
-        fillBedEdit(editFormData);
-    }
-
-    if (openModal) {
-        var target = document.getElementById(openModal);
-        if (target && window.bootstrap) {
-            new bootstrap.Modal(target).show();
-        }
-    }
-})();
-</script>
+<div
+    id="manageBedsConfig"
+    data-open-modal="<?= htmlspecialchars($openModal, ENT_QUOTES, 'UTF-8') ?>"
+    data-edit-form="<?= htmlspecialchars(json_encode($editFormData), ENT_QUOTES, 'UTF-8') ?>">
+</div>
+<script src="../assets/js/admin-manage-beds.js"></script>

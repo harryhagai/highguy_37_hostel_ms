@@ -151,7 +151,7 @@ $users = $pdo->query('SELECT id, username, email, phone, role, created_at FROM u
                             <button type="button" class="btn btn-sm btn-warning edit-user-btn" data-user="<?= $json ?>" data-bs-toggle="modal" data-bs-target="#editUserModal">
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
-                            <form method="post" onsubmit="return confirm('Delete this user?');" class="d-inline">
+                            <form method="post" data-confirm="Delete this user?" class="d-inline">
                                 <input type="hidden" name="action" value="delete_user">
                                 <input type="hidden" name="id" value="<?= (int)$user['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -277,50 +277,9 @@ $users = $pdo->query('SELECT id, username, email, phone, role, created_at FROM u
     </div>
 </div>
 
-<script>
-(function () {
-    function fillUserView(user) {
-        document.getElementById('viewUserId').textContent = user.id ?? '-';
-        document.getElementById('viewUserUsername').textContent = user.username ?? '-';
-        document.getElementById('viewUserEmail').textContent = user.email ?? '-';
-        document.getElementById('viewUserPhone').textContent = user.phone ?? '-';
-        document.getElementById('viewUserRole').textContent = user.role ?? '-';
-        document.getElementById('viewUserCreated').textContent = user.created_at ?? '-';
-    }
-
-    function fillUserEdit(user) {
-        document.getElementById('editUserId').value = user.id ?? '';
-        document.getElementById('editUserUsername').value = user.username ?? '';
-        document.getElementById('editUserEmail').value = user.email ?? '';
-        document.getElementById('editUserPhone').value = user.phone ?? '';
-        document.getElementById('editUserRole').value = user.role ?? 'user';
-    }
-
-    document.querySelectorAll('.view-user-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillUserView(JSON.parse(this.dataset.user));
-        });
-    });
-
-    document.querySelectorAll('.edit-user-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillUserEdit(JSON.parse(this.dataset.user));
-        });
-    });
-
-    var openModal = <?= json_encode($openModal) ?>;
-    var editFormData = <?= json_encode($editFormData) ?>;
-
-    if (openModal === 'editUserModal' && editFormData) {
-        fillUserEdit(editFormData);
-    }
-
-    if (openModal) {
-        var target = document.getElementById(openModal);
-        if (target && window.bootstrap) {
-            var modal = new bootstrap.Modal(target);
-            modal.show();
-        }
-    }
-})();
-</script>
+<div
+    id="manageUsersConfig"
+    data-open-modal="<?= htmlspecialchars($openModal, ENT_QUOTES, 'UTF-8') ?>"
+    data-edit-form="<?= htmlspecialchars(json_encode($editFormData), ENT_QUOTES, 'UTF-8') ?>">
+</div>
+<script src="../assets/js/admin-manage-users.js"></script>

@@ -101,7 +101,7 @@ $notices = $pdo->query('SELECT id, title, content, created_at FROM notices ORDER
                             <button type="button" class="btn btn-sm btn-warning edit-notice-btn" data-notice="<?= $json ?>" data-bs-toggle="modal" data-bs-target="#editNoticeModal">
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
-                            <form method="post" onsubmit="return confirm('Delete this notice?');" class="d-inline">
+                            <form method="post" data-confirm="Delete this notice?" class="d-inline">
                                 <input type="hidden" name="action" value="delete_notice">
                                 <input type="hidden" name="id" value="<?= (int)$notice['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -191,45 +191,9 @@ $notices = $pdo->query('SELECT id, title, content, created_at FROM notices ORDER
     </div>
 </div>
 
-<script>
-(function () {
-    function fillNoticeEdit(notice) {
-        document.getElementById('editNoticeId').value = notice.id ?? '';
-        document.getElementById('editNoticeTitle').value = notice.title ?? '';
-        document.getElementById('editNoticeContent').value = notice.content ?? '';
-    }
-
-    function fillNoticeView(notice) {
-        document.getElementById('viewNoticeId').textContent = notice.id ?? '-';
-        document.getElementById('viewNoticeTitle').textContent = notice.title ?? '-';
-        document.getElementById('viewNoticeCreated').textContent = notice.created_at ?? '-';
-        document.getElementById('viewNoticeContent').textContent = notice.content ?? '-';
-    }
-
-    document.querySelectorAll('.edit-notice-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillNoticeEdit(JSON.parse(this.dataset.notice));
-        });
-    });
-
-    document.querySelectorAll('.view-notice-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillNoticeView(JSON.parse(this.dataset.notice));
-        });
-    });
-
-    var openModal = <?= json_encode($openModal) ?>;
-    var editFormData = <?= json_encode($editFormData) ?>;
-
-    if (openModal === 'editNoticeModal' && editFormData) {
-        fillNoticeEdit(editFormData);
-    }
-
-    if (openModal) {
-        var target = document.getElementById(openModal);
-        if (target && window.bootstrap) {
-            new bootstrap.Modal(target).show();
-        }
-    }
-})();
-</script>
+<div
+    id="manageNoticeConfig"
+    data-open-modal="<?= htmlspecialchars($openModal, ENT_QUOTES, 'UTF-8') ?>"
+    data-edit-form="<?= htmlspecialchars(json_encode($editFormData), ENT_QUOTES, 'UTF-8') ?>">
+</div>
+<script src="../assets/js/admin-notice.js"></script>

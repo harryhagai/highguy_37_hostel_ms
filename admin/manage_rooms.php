@@ -176,7 +176,7 @@ $rooms = $pdo->query('SELECT r.*, h.name AS hostel_name FROM rooms r JOIN hostel
                             <button type="button" class="btn btn-sm btn-warning edit-room-btn" data-room="<?= $json ?>" data-bs-toggle="modal" data-bs-target="#editRoomModal">
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
-                            <form method="post" onsubmit="return confirm('Delete this room?');" class="d-inline">
+                            <form method="post" data-confirm="Delete this room?" class="d-inline">
                                 <input type="hidden" name="action" value="delete_room">
                                 <input type="hidden" name="id" value="<?= (int)$room['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -323,60 +323,9 @@ $rooms = $pdo->query('SELECT r.*, h.name AS hostel_name FROM rooms r JOIN hostel
     </div>
 </div>
 
-<script>
-(function () {
-    function fillRoomEdit(room) {
-        document.getElementById('editRoomId').value = room.id ?? '';
-        document.getElementById('editRoomHostel').value = room.hostel_id ?? '';
-        document.getElementById('editRoomNumber').value = room.room_number ?? '';
-        document.getElementById('editRoomType').value = room.room_type ?? '';
-        if (document.getElementById('editRoomCapacity')) {
-            document.getElementById('editRoomCapacity').value = room.capacity ?? '';
-        }
-        if (document.getElementById('editRoomAvailable')) {
-            document.getElementById('editRoomAvailable').value = room.available ?? '';
-        }
-        document.getElementById('editRoomPrice').value = room.price ?? '';
-    }
-
-    function fillRoomView(room) {
-        document.getElementById('viewRoomId').textContent = room.id ?? '-';
-        document.getElementById('viewRoomHostel').textContent = room.hostel_name ?? '-';
-        document.getElementById('viewRoomNumber').textContent = room.room_number ?? '-';
-        document.getElementById('viewRoomType').textContent = room.room_type ?? '-';
-        if (document.getElementById('viewRoomCapacity')) {
-            document.getElementById('viewRoomCapacity').textContent = room.capacity ?? '-';
-        }
-        if (document.getElementById('viewRoomAvailable')) {
-            document.getElementById('viewRoomAvailable').textContent = room.available ?? '-';
-        }
-        document.getElementById('viewRoomPrice').textContent = room.price ?? '-';
-    }
-
-    document.querySelectorAll('.edit-room-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillRoomEdit(JSON.parse(this.dataset.room));
-        });
-    });
-
-    document.querySelectorAll('.view-room-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillRoomView(JSON.parse(this.dataset.room));
-        });
-    });
-
-    var openModal = <?= json_encode($openModal) ?>;
-    var editFormData = <?= json_encode($editFormData) ?>;
-
-    if (openModal === 'editRoomModal' && editFormData) {
-        fillRoomEdit(editFormData);
-    }
-
-    if (openModal) {
-        var target = document.getElementById(openModal);
-        if (target && window.bootstrap) {
-            new bootstrap.Modal(target).show();
-        }
-    }
-})();
-</script>
+<div
+    id="manageRoomsConfig"
+    data-open-modal="<?= htmlspecialchars($openModal, ENT_QUOTES, 'UTF-8') ?>"
+    data-edit-form="<?= htmlspecialchars(json_encode($editFormData), ENT_QUOTES, 'UTF-8') ?>">
+</div>
+<script src="../assets/js/admin-manage-rooms.js"></script>

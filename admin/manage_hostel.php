@@ -185,7 +185,7 @@ $hostels = $pdo->query('SELECT id, name, description, location, hostel_image, cr
                         <td><?= htmlspecialchars($hostel['location']) ?></td>
                         <td>
                             <?php if (!empty($hostel['hostel_image'])): ?>
-                                <img src="../<?= htmlspecialchars($hostel['hostel_image']) ?>" alt="Hostel" style="width:40px;height:40px;object-fit:cover;" class="rounded">
+                                <img src="../<?= htmlspecialchars($hostel['hostel_image']) ?>" alt="Hostel" class="rounded hostel-thumb-sm">
                             <?php else: ?>
                                 <span class="text-muted">No image</span>
                             <?php endif; ?>
@@ -198,7 +198,7 @@ $hostels = $pdo->query('SELECT id, name, description, location, hostel_image, cr
                             <button type="button" class="btn btn-sm btn-warning edit-hostel-btn" data-hostel="<?= $json ?>" data-bs-toggle="modal" data-bs-target="#editHostelModal">
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
-                            <form method="post" onsubmit="return confirm('Delete this hostel?');" class="d-inline">
+                            <form method="post" data-confirm="Delete this hostel?" class="d-inline">
                                 <input type="hidden" name="action" value="delete_hostel">
                                 <input type="hidden" name="id" value="<?= (int)$hostel['id'] ?>">
                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -280,7 +280,7 @@ $hostels = $pdo->query('SELECT id, name, description, location, hostel_image, cr
                         <div class="col-md-12">
                             <label class="form-label">Replace Image (optional)</label>
                             <input type="file" name="hostel_image" class="form-control" accept="image/*">
-                            <img id="editHostelPreview" src="" alt="Current" class="mt-2 rounded" style="width:80px;height:80px;object-fit:cover;display:none;">
+                            <img id="editHostelPreview" src="" alt="Current" class="mt-2 rounded hostel-preview-md">
                         </div>
                     </div>
                 </div>
@@ -306,70 +306,15 @@ $hostels = $pdo->query('SELECT id, name, description, location, hostel_image, cr
                 <p class="mb-2"><strong>Location:</strong> <span id="viewHostelLocation">-</span></p>
                 <p class="mb-2"><strong>Description:</strong> <span id="viewHostelDescription">-</span></p>
                 <p class="mb-2"><strong>Created:</strong> <span id="viewHostelCreated">-</span></p>
-                <img id="viewHostelImage" src="" alt="Hostel" class="rounded" style="width:120px;height:120px;object-fit:cover;display:none;">
+                <img id="viewHostelImage" src="" alt="Hostel" class="rounded hostel-view-lg">
             </div>
         </div>
     </div>
 </div>
 
-<script>
-(function () {
-    function fillHostelEdit(hostel) {
-        document.getElementById('editHostelId').value = hostel.id ?? '';
-        document.getElementById('editHostelName').value = hostel.name ?? '';
-        document.getElementById('editHostelLocation').value = hostel.location ?? '';
-        document.getElementById('editHostelDescription').value = hostel.description ?? '';
-        document.getElementById('editHostelExistingImage').value = hostel.hostel_image ?? '';
-
-        var preview = document.getElementById('editHostelPreview');
-        if (hostel.hostel_image) {
-            preview.src = '../' + hostel.hostel_image;
-            preview.style.display = 'inline-block';
-        } else {
-            preview.style.display = 'none';
-        }
-    }
-
-    function fillHostelView(hostel) {
-        document.getElementById('viewHostelId').textContent = hostel.id ?? '-';
-        document.getElementById('viewHostelName').textContent = hostel.name ?? '-';
-        document.getElementById('viewHostelLocation').textContent = hostel.location ?? '-';
-        document.getElementById('viewHostelDescription').textContent = hostel.description ?? '-';
-        document.getElementById('viewHostelCreated').textContent = hostel.created_at ?? '-';
-
-        var image = document.getElementById('viewHostelImage');
-        if (hostel.hostel_image) {
-            image.src = '../' + hostel.hostel_image;
-            image.style.display = 'inline-block';
-        } else {
-            image.style.display = 'none';
-        }
-    }
-
-    document.querySelectorAll('.edit-hostel-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillHostelEdit(JSON.parse(this.dataset.hostel));
-        });
-    });
-
-    document.querySelectorAll('.view-hostel-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            fillHostelView(JSON.parse(this.dataset.hostel));
-        });
-    });
-
-    var openModal = <?= json_encode($openModal) ?>;
-    var editFormData = <?= json_encode($editFormData) ?>;
-
-    if (openModal === 'editHostelModal' && editFormData) {
-        fillHostelEdit(editFormData);
-    }
-
-    if (openModal) {
-        var target = document.getElementById(openModal);
-        if (target && window.bootstrap) {
-            new bootstrap.Modal(target).show();
-        }
-    }
-})();
-</script>
+<div
+    id="manageHostelConfig"
+    data-open-modal="<?= htmlspecialchars($openModal, ENT_QUOTES, 'UTF-8') ?>"
+    data-edit-form="<?= htmlspecialchars(json_encode($editFormData), ENT_QUOTES, 'UTF-8') ?>">
+</div>
+<script src="../assets/js/admin-manage-hostel.js"></script>
