@@ -3,6 +3,18 @@ ob_start();
 session_start();
 require_once __DIR__ . '/../config/db_connection.php';
 
+function tableExists(PDO $pdo, string $table): bool {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
+    $stmt->execute([$table]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
+function columnExists(PDO $pdo, string $table, string $column): bool {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $stmt->execute([$table, $column]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
 // Example admin info (replace with your own session logic)
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'Admin';
 $profile_pic = isset($_SESSION['profile_pic']) ? $_SESSION['profile_pic'] : '../assets/images/prof.jpg';
@@ -10,8 +22,51 @@ $profile_pic = isset($_SESSION['profile_pic']) ? $_SESSION['profile_pic'] : '../
 // --- DYNAMIC STATISTICS ---
 $total_users = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
 $total_hostels = $pdo->query("SELECT COUNT(*) FROM hostels")->fetchColumn();
-$rooms_available = $pdo->query("SELECT COUNT(*) FROM rooms WHERE available > 0")->fetchColumn();
-$full_rooms = $pdo->query("SELECT COUNT(*) FROM rooms WHERE available = 0")->fetchColumn();
+$hasRoomsAvailableColumn = columnExists($pdo, 'rooms', 'available');
+$hasBedsTable = tableExists($pdo, 'beds');
+$hasBookingBed = columnExists($pdo, 'bookings', 'bed_id');
+$hasBookingStart = columnExists($pdo, 'bookings', 'start_date');
+$hasBookingEnd = columnExists($pdo, 'bookings', 'end_date');
+
+if ($hasRoomsAvailableColumn) {
+    // Legacy schema
+    $rooms_available = $pdo->query("SELECT COUNT(*) FROM rooms WHERE available > 0")->fetchColumn();
+    $full_rooms = $pdo->query("SELECT COUNT(*) FROM rooms WHERE available = 0")->fetchColumn();
+} elseif ($hasBedsTable && $hasBookingBed && $hasBookingStart && $hasBookingEnd) {
+    // New schema: room availability derives from active beds and active date-range bookings
+    $rooms_available = $pdo->query("
+        SELECT COUNT(DISTINCT b.room_id)
+        FROM beds b
+        LEFT JOIN bookings bk
+            ON bk.bed_id = b.id
+           AND bk.status IN ('pending', 'confirmed')
+           AND CURDATE() >= bk.start_date
+           AND CURDATE() < bk.end_date
+        WHERE b.status = 'active'
+          AND bk.id IS NULL
+    ")->fetchColumn();
+
+    $full_rooms = $pdo->query("
+        SELECT COUNT(*)
+        FROM (
+            SELECT b.room_id,
+                   SUM(CASE WHEN bk.id IS NULL THEN 1 ELSE 0 END) AS free_beds
+            FROM beds b
+            LEFT JOIN bookings bk
+                ON bk.bed_id = b.id
+               AND bk.status IN ('pending', 'confirmed')
+               AND CURDATE() >= bk.start_date
+               AND CURDATE() < bk.end_date
+            WHERE b.status = 'active'
+            GROUP BY b.room_id
+            HAVING free_beds = 0
+        ) room_state
+    ")->fetchColumn();
+} else {
+    // Fallback (schema still in transition)
+    $rooms_available = 0;
+    $full_rooms = 0;
+}
 
 // --- MULTI-LINE GRAPH DATA (Application Management) ---
 $months = [];
@@ -39,6 +94,7 @@ $allowed = [
     'manage_users' => 'manage_users.php',
     'manage_hostel' => 'manage_hostel.php',
     'manage_rooms' => 'manage_rooms.php',
+    'manage_beds' => 'manage_beds.php',
     'application_management' => 'application_management.php', // <-- Added!
     'notice' => 'notice.php'
 ];
@@ -312,6 +368,7 @@ $allowed = [
                 <li><a href="admin_dashboard_layout.php?page=manage_users" class="<?= (isset($_GET['page']) && $_GET['page']=='manage_users')?'active':'' ?>"><i class="bi bi-people"></i> <span>Manage Users</span></a></li>
                 <li><a href="admin_dashboard_layout.php?page=manage_hostel" class="<?= (isset($_GET['page']) && $_GET['page']=='manage_hostel')?'active':'' ?>"><i class="bi bi-building"></i> <span>Manage Hostels</span></a></li>
                 <li><a href="admin_dashboard_layout.php?page=manage_rooms" class="<?= (isset($_GET['page']) && $_GET['page']=='manage_rooms')?'active':'' ?>"><i class="bi bi-door-open"></i> <span>Manage Rooms</span></a></li>
+                <li><a href="admin_dashboard_layout.php?page=manage_beds" class="<?= (isset($_GET['page']) && $_GET['page']=='manage_beds')?'active':'' ?>"><i class="bi bi-grid-3x3-gap"></i> <span>Manage Beds</span></a></li>
                 <!-- Application Management added here -->
                 <li><a href="admin_dashboard_layout.php?page=application_management" class="<?= (isset($_GET['page']) && $_GET['page']=='application_management')?'active':'' ?>"><i class="bi bi-clipboard-check"></i> <span>Application</span></a></li>
                 <li><a href="admin_dashboard_layout.php?page=notice" class="<?= (isset($_GET['page']) && $_GET['page']=='notice')?'active':'' ?>"><i class="bi bi-megaphone"></i> <span>Notices</span></a></li>
@@ -383,6 +440,7 @@ $allowed = [
 </footer>
 <!-- Bootstrap 5 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/ui-spinner.js"></script>
 <script>
     // Chart.js Multi-line Graph
     document.addEventListener('DOMContentLoaded', function() {

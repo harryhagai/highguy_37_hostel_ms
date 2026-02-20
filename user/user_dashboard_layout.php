@@ -2,6 +2,18 @@
 session_start();
 require_once __DIR__ . '/../config/db_connection.php';
 
+function udColumnExists(PDO $pdo, string $table, string $column): bool {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $stmt->execute([$table, $column]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
+function udTableExists(PDO $pdo, string $table): bool {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
+    $stmt->execute([$table]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');
@@ -24,18 +36,56 @@ $stmt->execute([$user_id]);
 $my_bookings = $stmt->fetchColumn();
 
 // Fetch Available Rooms count
-$stmt = $pdo->query("SELECT COUNT(*) FROM rooms WHERE available > 0");
-$available_rooms = $stmt->fetchColumn();
+$hasRoomsAvailable = udColumnExists($pdo, 'rooms', 'available');
+$hasBedsTable = udTableExists($pdo, 'beds');
+$hasBookingBed = udColumnExists($pdo, 'bookings', 'bed_id');
+$hasBookingStart = udColumnExists($pdo, 'bookings', 'start_date');
+$hasBookingEnd = udColumnExists($pdo, 'bookings', 'end_date');
+
+if ($hasRoomsAvailable) {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM rooms WHERE available > 0");
+    $available_rooms = $stmt->fetchColumn();
+} elseif ($hasBedsTable && $hasBookingBed && $hasBookingStart && $hasBookingEnd) {
+    $stmt = $pdo->query("
+        SELECT COUNT(DISTINCT b.room_id)
+        FROM beds b
+        LEFT JOIN bookings bk
+            ON bk.bed_id = b.id
+           AND bk.status IN ('pending', 'confirmed')
+           AND CURDATE() >= bk.start_date
+           AND CURDATE() < bk.end_date
+        WHERE b.status = 'active'
+          AND bk.id IS NULL
+    ");
+    $available_rooms = $stmt->fetchColumn();
+} else {
+    $available_rooms = 0;
+}
 
 // Fetch recent bookings (last 3)
-$stmt = $pdo->prepare("SELECT b.id, b.booking_date, r.room_number, h.name AS hostel_name, b.status
-    FROM bookings b
-    JOIN rooms r ON b.room_id = r.id
-    JOIN hostels h ON r.hostel_id = h.id
-    WHERE b.user_id = ?
-    ORDER BY b.booking_date DESC LIMIT 3");
-$stmt->execute([$user_id]);
-$recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$hasBookingRoom = udColumnExists($pdo, 'bookings', 'room_id');
+if ($hasBookingRoom) {
+    $stmt = $pdo->prepare("SELECT b.id, b.booking_date, r.room_number, h.name AS hostel_name, b.status
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.id
+        JOIN hostels h ON r.hostel_id = h.id
+        WHERE b.user_id = ?
+        ORDER BY b.booking_date DESC LIMIT 3");
+    $stmt->execute([$user_id]);
+    $recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} elseif ($hasBookingBed) {
+    $stmt = $pdo->prepare("SELECT b.id, b.booking_date, r.room_number, h.name AS hostel_name, b.status
+        FROM bookings b
+        JOIN beds bd ON b.bed_id = bd.id
+        JOIN rooms r ON bd.room_id = r.id
+        JOIN hostels h ON r.hostel_id = h.id
+        WHERE b.user_id = ?
+        ORDER BY b.booking_date DESC LIMIT 3");
+    $stmt->execute([$user_id]);
+    $recent_bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $recent_bookings = [];
+}
 
 // Fetch latest announcement
 $stmt = $pdo->query("SELECT title, content, created_at FROM notices ORDER BY created_at DESC LIMIT 1");
@@ -494,5 +544,6 @@ $control_number = "991234567890";
     </div>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/ui-spinner.js"></script>
 </body>
 </html>
