@@ -1,4 +1,17 @@
 <?php
+$heroImageFiles = glob(__DIR__ . '/assets/images/hero/*.{jpg,jpeg,png,webp,avif,gif}', GLOB_BRACE);
+sort($heroImageFiles);
+
+$heroImages = array_map(
+    static function ($filePath) {
+        return 'assets/images/hero/' . rawurlencode(basename($filePath));
+    },
+    $heroImageFiles ?: []
+);
+
+if (empty($heroImages)) {
+    $heroImages = ['assets/images/bg1111.jpg'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,7 +109,13 @@
                 <div class="col-lg-6 d-none d-lg-block">
                     <div class="hero-media-wrap">
                         <div class="hero-media-card">
-                            <img src="assets/images/bg1111.jpg" alt="Student hostel view" class="hero-media-image">
+                            <img
+                                src="<?= htmlspecialchars($heroImages[0]) ?>"
+                                alt="Student hostel view"
+                                class="hero-media-image"
+                                data-hero-images='<?= htmlspecialchars(json_encode($heroImages, JSON_UNESCAPED_SLASHES)) ?>'
+                                data-hero-interval="3000"
+                            >
                         </div>
                         <div class="hero-stat-card">
                             <span class="hero-stat-icon">
