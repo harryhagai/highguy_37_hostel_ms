@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     hostel.location +
                     '</a>';
                 document.getElementById('modalHostelDesc').textContent = hostel.description;
+                document.getElementById('modalHostelGender').textContent = hostel.gender_label || 'All Genders';
                 document.getElementById('modalTotalRooms').textContent = hostel.total_rooms;
                 document.getElementById('modalFreeRooms').textContent = hostel.free_rooms;
                 // Google Maps embed (small preview)

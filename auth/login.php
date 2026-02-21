@@ -1,60 +1,11 @@
 <?php
-session_start();
-require_once __DIR__ . '/config/db_connection.php';
-
-// CSRF token generation
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-$errors = [];
-$email = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF check
-    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        $errors[] = "Invalid CSRF token.";
-    }
-
-    // Sanitize input
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-
-    // Validate fields
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Please enter a valid email address.";
-    }
-    if (empty($password)) {
-        $errors[] = "Please enter your password.";
-    }
-
-    // If no errors, check credentials
-    if (empty($errors)) {
-        $stmt = $pdo->prepare("SELECT id, username, email, password, role FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-
-        if ($user && password_verify($password, $user['password'])) {
-            // Set session variables
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['role'] = $user['role'];
-
-            // Redirect based on role
-            if ($user['role'] === 'admin') {
-                header("Location: admin/admin_dashboard_layout.php");
-                exit;
-            } else {
-                header("Location: user/user_dashboard_layout.php");
-                exit;
-            }
-        } else {
-            $errors[] = "Invalid email or password.";
-        }
-    }
-}
+$authState = require __DIR__ . '/../controllers/auth/login_controller.php';
+$errors = $authState['errors'];
+$email = $authState['email'];
+$rememberMe = !empty($authState['remember_me']);
+$csrfToken = $authState['csrf_token'];
+$successMessage = $authState['success_message'];
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="assets/css/login.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="stylesheet" href="../assets/css/login.css">
 </head>
 <body class="auth-body">
     <section class="auth-shell py-4 py-lg-5">
@@ -100,6 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <p class="mb-0">Enter your credentials to access your account.</p>
                         </div>
 
+                        <?php if ($successMessage): ?>
+                            <div class="alert alert-success" role="alert">
+                                <?= htmlspecialchars($successMessage) ?>
+                            </div>
+                        <?php endif; ?>
+
                         <?php if (!empty($errors)): ?>
                             <div class="alert alert-danger" role="alert">
                                 <ul class="mb-0 ps-3">
@@ -111,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endif; ?>
 
                         <form method="POST" autocomplete="off" novalidate>
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
                             <div class="mb-3">
                                 <label class="form-label" for="email">Email</label>
@@ -145,6 +102,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
+                            <div class="form-check mb-3">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    value="1"
+                                    id="remember_me"
+                                    name="remember_me"
+                                    <?= $rememberMe ? 'checked' : '' ?>
+                                >
+                                <label class="form-check-label" for="remember_me">Remember me</label>
+                            </div>
+
                             <button type="submit" class="btn btn-brand w-100">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Login
                             </button>
@@ -155,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <a href="register.php" class="auth-link-accent">Create one</a>
                         </p>
                         <div class="text-center mt-2">
-                            <a href="index.php" class="auth-home-link">
+                            <a href="../index.php" class="auth-home-link">
                                 <i class="bi bi-arrow-left-short"></i> Back to Home
                             </a>
                         </div>
@@ -166,8 +135,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/ui-spinner.js"></script>
+    <script src="../assets/js/ui-spinner.js"></script>
 </body>
 </html>
-
-

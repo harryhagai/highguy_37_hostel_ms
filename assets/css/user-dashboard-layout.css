@@ -61,6 +61,10 @@
             font-size: 1.12rem;
             color: #fff;
             margin-bottom: 0.5rem;
+            max-width: 88%;
+            text-align: center;
+            line-height: 1.3;
+            word-spacing: 0.08em;
         }
         .sidebar .sidebar-menu {
             width: 100%;
@@ -140,6 +144,12 @@
         .user-menu .user-name {
             font-weight: 600;
             color: var(--aqua-dark);
+            display: inline-block;
+            max-width: clamp(130px, 20vw, 280px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-spacing: 0.08em;
         }
         .user-menu .dropdown-toggle::after {
             display: none;

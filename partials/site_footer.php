@@ -3,6 +3,8 @@ $navPrefix = isset($navPrefix) ? $navPrefix : '';
 $homeHref = $navPrefix === '' ? '#home' : $navPrefix . '#home';
 $aboutHref = $navPrefix === '' ? '#about' : $navPrefix . '#about';
 $contactHref = $navPrefix === '' ? '#contact' : $navPrefix . '#contact';
+$loginHref = $navPrefix === '' ? 'auth/login.php' : $navPrefix . 'auth/login.php';
+$registerHref = $navPrefix === '' ? 'auth/register.php' : $navPrefix . 'auth/register.php';
 ?>
 <footer class="site-footer">
     <div class="container">
@@ -31,15 +33,15 @@ $contactHref = $navPrefix === '' ? '#contact' : $navPrefix . '#contact';
                     <li><a href="<?= htmlspecialchars($homeHref) ?>">Home</a></li>
                     <li><a href="<?= htmlspecialchars($aboutHref) ?>">About Us</a></li>
                     <li><a href="<?= htmlspecialchars($contactHref) ?>">Contact Us</a></li>
-                    <li><a href="register.php">Get Started</a></li>
+                    <li><a href="<?= htmlspecialchars($registerHref) ?>">Get Started</a></li>
                 </ul>
             </div>
 
             <div class="col-lg-3 col-md-6">
                 <h5 class="footer-title">Support</h5>
                 <ul class="footer-links">
-                    <li><a href="login.php">Student Login</a></li>
-                    <li><a href="register.php">Create Account</a></li>
+                    <li><a href="<?= htmlspecialchars($loginHref) ?>">Student Login</a></li>
+                    <li><a href="<?= htmlspecialchars($registerHref) ?>">Create Account</a></li>
                     <li><a href="mailto:support@hostelpro.com">support@hostelpro.com</a></li>
                     <li><a href="tel:+254700123456">+254 700 123456</a></li>
                 </ul>

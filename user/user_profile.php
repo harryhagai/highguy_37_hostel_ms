@@ -3,11 +3,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../config/db_connection.php';
+require_once __DIR__ . '/../permission/role_permission.php';
+rp_require_roles(['user'], '../auth/login.php');
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../login.php');
-    exit;
-}
 $user_id = $_SESSION['user_id'];
 
 // Fetch user info
@@ -50,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_photo']) && 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
     
     <link rel="stylesheet" href="../assets/css/user-profile.css">
 </head>

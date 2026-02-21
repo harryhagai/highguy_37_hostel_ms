@@ -2,9 +2,17 @@
 ob_start();
 session_start();
 require_once __DIR__ . '/../config/db_connection.php';
+require_once __DIR__ . '/../permission/role_permission.php';
+rp_require_roles(['admin'], '../auth/login.php');
 
 // Example admin info (replace with your own session logic)
 $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'Admin';
+$displayUsername = trim(preg_replace('/\s+/', ' ', str_replace('_', ' ', (string)$username)) ?? '');
+if ($displayUsername === '') {
+    $displayUsername = 'Admin';
+} else {
+    $displayUsername = ucwords(strtolower($displayUsername));
+}
 $profile_pic = isset($_SESSION['profile_pic']) ? $_SESSION['profile_pic'] : '../assets/images/prof.jpg';
 
 // --- PAGE ROUTING ---
@@ -51,6 +59,7 @@ if ($isSpaRequest) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
     
     <link rel="stylesheet" href="../assets/css/admin-dashboard-layout.css">
     <link rel="stylesheet" href="../assets/css/admin-dashboard-content.css">
@@ -60,7 +69,7 @@ if ($isSpaRequest) {
 <header class="dashboard-header">
     <div class="header-left">
         <button type="button" class="sidebar-toggle-btn" id="sidebarToggle" data-no-spinner="true" aria-label="Toggle sidebar">
-            <i class="bi bi-list"></i>
+            <i class="bi bi-chevron-left"></i>
         </button>
         <div class="header-title">
             <i class="bi bi-house-door-fill"></i> HostelPro Admin Dashboard
@@ -98,14 +107,14 @@ if ($isSpaRequest) {
         <div class="user-menu dropdown">
             <button type="button" class="profile-trigger" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-no-spinner="true">
                 <img src="<?= htmlspecialchars($profile_pic) ?>" alt="Profile" class="profile-pic header-profile-pic">
-                <span class="user-name"><?= htmlspecialchars($username) ?></span>
+                <span class="user-name"><?= htmlspecialchars($displayUsername) ?></span>
                 <i class="bi bi-caret-down-fill"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=dashboard" data-spa-page="dashboard" data-no-spinner="true"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=settings" data-spa-page="settings" data-no-spinner="true"><i class="bi bi-gear"></i> Settings</a></li>
+                <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=settings" data-spa-page="settings" data-no-spinner="true"><i class="bi bi-person-circle"></i> My Profile</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="../logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                <li><a class="dropdown-item" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
             </ul>
         </div>
     </div>
@@ -113,9 +122,11 @@ if ($isSpaRequest) {
 <div class="dashboard-wrapper">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <div class="profile">
-            <img src="<?= htmlspecialchars($profile_pic) ?>" alt="Profile Picture" class="profile-pic" id="sidebarProfilePic">
-            <div class="profile-name"><?= htmlspecialchars($username) ?></div>
+        <div class="profile sidebar-brand">
+            <span class="profile-pic sidebar-brand-icon rounded-circle">
+                <img src="../assets/images/logo.png" alt="HostelPro Logo" class="sidebar-brand-logo rounded-circle">
+            </span>
+            <div class="profile-name">HostelPro System</div>
         </div>
         <div class="sidebar-main">
             <nav class="sidebar-menu">
@@ -133,7 +144,7 @@ if ($isSpaRequest) {
         <div class="sidebar-footer">
             <div class="sidebar-divider"></div>
             <a href="admin_dashboard_layout.php?page=settings" data-spa-page="settings" data-no-spinner="true" class="<?= $page === 'settings' ? 'active' : '' ?>"><i class="bi bi-gear"></i> <span>Settings</span></a>
-            <a href="../logout.php" class="logout-link"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a>
+            <a href="../auth/logout.php" class="logout-link"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a>
         </div>
     </aside>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>

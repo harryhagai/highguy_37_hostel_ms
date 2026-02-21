@@ -7,6 +7,8 @@ $errors = [];
 $success = '';
 $openModal = '';
 $editFormData = null;
+$addFormData = null;
+$allowedStatuses = ['active', 'maintenance', 'inactive'];
 
 try {
     $rooms = $pdo->query("
@@ -27,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roomId = (int)($_POST['room_id'] ?? 0);
         $bedNumber = trim($_POST['bed_number'] ?? '');
         $status = $_POST['status'] ?? 'active';
-        if (!in_array($status, ['active', 'maintenance', 'inactive'], true)) {
+        if (!in_array($status, $allowedStatuses, true)) {
             $status = 'active';
         }
 
@@ -48,6 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = 'Bed added successfully.';
         } else {
             $openModal = 'addBedModal';
+            $addFormData = [
+                'room_id' => $roomId,
+                'bed_number' => $bedNumber,
+                'status' => $status,
+            ];
         }
     }
 
@@ -56,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roomId = (int)($_POST['room_id'] ?? 0);
         $bedNumber = trim($_POST['bed_number'] ?? '');
         $status = $_POST['status'] ?? 'active';
-        if (!in_array($status, ['active', 'maintenance', 'inactive'], true)) {
+        if (!in_array($status, $allowedStatuses, true)) {
             $status = 'active';
         }
 
@@ -86,19 +93,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'delete_bed') {
+    if ($action === 'set_bed_inactive') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id > 0) {
-            $stmt = $pdo->prepare('DELETE FROM beds WHERE id = ?');
+            $stmt = $pdo->prepare("UPDATE beds SET status = 'inactive' WHERE id = ?");
             $stmt->execute([$id]);
-            $success = 'Bed deleted successfully.';
+            $success = 'Bed set to inactive successfully.';
+        }
+    }
+
+    if ($action === 'bulk_beds') {
+        $bulkAction = trim((string)($_POST['bulk_action_type'] ?? ''));
+        $selectedIds = $_POST['selected_bed_ids'] ?? [];
+        $ids = [];
+
+        if (is_array($selectedIds)) {
+            foreach ($selectedIds as $rawId) {
+                $id = (int)$rawId;
+                if ($id > 0) {
+                    $ids[$id] = $id;
+                }
+            }
+        }
+        $ids = array_values($ids);
+
+        $statusByAction = [
+            'set_active' => 'active',
+            'set_maintenance' => 'maintenance',
+            'set_inactive' => 'inactive',
+        ];
+        $validActions = array_keys($statusByAction);
+
+        if (!in_array($bulkAction, $validActions, true)) {
+            $errors[] = 'Choose a valid bulk action.';
+        } elseif (empty($ids)) {
+            $errors[] = 'Select at least one bed for bulk action.';
+        } else {
+            try {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $statusValue = $statusByAction[$bulkAction];
+                $params = array_merge([$statusValue], $ids);
+                $stmt = $pdo->prepare('UPDATE beds SET status = ? WHERE id IN (' . $placeholders . ')');
+                $stmt->execute($params);
+                $success = count($ids) . ' bed(s) updated to ' . ucfirst($statusValue) . '.';
+            } catch (Throwable $e) {
+                $errors[] = 'Bulk action failed. Some beds may have related records.';
+            }
         }
     }
 }
 
 try {
     $beds = $pdo->query("
-        SELECT b.id, b.room_id, b.bed_number, b.status, b.created_at, r.room_number, h.name AS hostel_name
+        SELECT
+            b.id,
+            b.room_id,
+            b.bed_number,
+            b.status,
+            b.created_at,
+            b.updated_at,
+            r.room_number,
+            h.id AS hostel_id,
+            h.name AS hostel_name
         FROM beds b
         JOIN rooms r ON r.id = b.room_id
         JOIN hostels h ON h.id = r.hostel_id
@@ -111,11 +167,91 @@ try {
     }
 }
 
+$stats = [
+    'total_beds' => 0,
+    'active_beds' => 0,
+    'maintenance_beds' => 0,
+    'inactive_beds' => 0,
+    'new_today' => 0,
+];
+$today = date('Y-m-d');
+
+$hostelMap = [];
+$roomMap = [];
+
+foreach ($beds as &$bed) {
+    $status = strtolower(trim((string)($bed['status'] ?? 'active')));
+    if (!in_array($status, $allowedStatuses, true)) {
+        $status = 'active';
+    }
+    $bed['status'] = $status;
+
+    $createdAt = (string)($bed['created_at'] ?? '');
+    $updatedAt = (string)($bed['updated_at'] ?? '');
+    $createdDate = $createdAt !== '' ? date('Y-m-d', strtotime($createdAt)) : '';
+
+    $bed['created_date'] = $createdDate;
+    $bed['created_at_display'] = $createdAt !== '' ? date('d M Y', strtotime($createdAt)) : '-';
+    $bed['updated_at_display'] = $updatedAt !== '' ? date('d M Y', strtotime($updatedAt)) : '-';
+
+    $stats['total_beds']++;
+    if ($status === 'active') {
+        $stats['active_beds']++;
+    } elseif ($status === 'maintenance') {
+        $stats['maintenance_beds']++;
+    } else {
+        $stats['inactive_beds']++;
+    }
+    if ($createdDate === $today) {
+        $stats['new_today']++;
+    }
+
+    $hostelId = (int)($bed['hostel_id'] ?? 0);
+    $hostelName = trim((string)($bed['hostel_name'] ?? ''));
+    if ($hostelId > 0 && $hostelName !== '') {
+        $hostelMap[$hostelId] = $hostelName;
+    }
+
+    $roomId = (int)($bed['room_id'] ?? 0);
+    $roomNumber = trim((string)($bed['room_number'] ?? ''));
+    if ($roomId > 0 && $roomNumber !== '') {
+        $roomMap[$roomId] = [
+            'id' => $roomId,
+            'room_number' => $roomNumber,
+            'hostel_id' => $hostelId,
+            'hostel_name' => $hostelName,
+        ];
+    }
+}
+unset($bed);
+
+natcasesort($hostelMap);
+$hostelOptions = [];
+foreach ($hostelMap as $id => $name) {
+    $hostelOptions[] = [
+        'id' => (int)$id,
+        'name' => $name,
+    ];
+}
+
+uasort($roomMap, static function (array $a, array $b): int {
+    $byRoom = strnatcasecmp((string)$a['room_number'], (string)$b['room_number']);
+    if ($byRoom !== 0) {
+        return $byRoom;
+    }
+    return strnatcasecmp((string)$a['hostel_name'], (string)$b['hostel_name']);
+});
+$roomOptions = array_values($roomMap);
+
 return [
     'errors' => $errors,
     'success' => $success,
     'openModal' => $openModal,
     'editFormData' => $editFormData,
+    'addFormData' => $addFormData,
     'rooms' => $rooms,
-    'beds' => $beds
+    'beds' => $beds,
+    'stats' => $stats,
+    'hostelOptions' => $hostelOptions,
+    'roomOptions' => $roomOptions,
 ];

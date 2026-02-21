@@ -27,7 +27,19 @@ CREATE TABLE IF NOT EXISTS hostels (
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
     location VARCHAR(150),
+    gender ENUM('male', 'female', 'all') NOT NULL DEFAULT 'all',
+    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     hostel_image VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Shared Room Image Library
+-- One image can be linked to many rooms via rooms.room_image_id
+CREATE TABLE IF NOT EXISTS room_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_path VARCHAR(255) NOT NULL,
+    image_label VARCHAR(120) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -40,11 +52,14 @@ CREATE TABLE IF NOT EXISTS rooms (
     room_type VARCHAR(50),
     price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     description TEXT,
+    room_image_id INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT uq_room_per_hostel UNIQUE (hostel_id, room_number),
     CONSTRAINT fk_rooms_hostel
-        FOREIGN KEY (hostel_id) REFERENCES hostels(id) ON DELETE CASCADE
+        FOREIGN KEY (hostel_id) REFERENCES hostels(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rooms_room_image
+        FOREIGN KEY (room_image_id) REFERENCES room_images(id) ON DELETE SET NULL
 );
 
 -- Beds

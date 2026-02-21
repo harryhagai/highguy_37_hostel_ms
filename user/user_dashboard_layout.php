@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db_connection.php';
+require_once __DIR__ . '/../permission/role_permission.php';
+rp_require_roles(['user'], '../auth/login.php');
 
 function udColumnExists(PDO $pdo, string $table, string $column): bool {
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
@@ -14,11 +16,6 @@ function udTableExists(PDO $pdo, string $table): bool {
     return (int)$stmt->fetchColumn() > 0;
 }
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../login.php');
-    exit;
-}
 $user_id = $_SESSION['user_id'];
 
 // Fetch user info
@@ -27,6 +24,12 @@ $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $username = $user['username'];
+$displayUsername = trim(preg_replace('/\s+/', ' ', str_replace('_', ' ', (string)$username)) ?? '');
+if ($displayUsername === '') {
+    $displayUsername = 'User';
+} else {
+    $displayUsername = ucwords(strtolower($displayUsername));
+}
 $email = $user['email'];
 $profile_pic = $user['profile_photo'] ? $user['profile_photo'] : '../assets/images/prof.jpg';
 
@@ -106,6 +109,7 @@ $control_number = "991234567890";
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
     
     <link rel="stylesheet" href="../assets/css/user-dashboard-layout.css">
 </head>
@@ -115,7 +119,7 @@ $control_number = "991234567890";
         <aside class="sidebar">
             <div class="profile">
                 <img src="<?= htmlspecialchars($profile_pic) ?>" alt="Profile Picture" class="profile-pic">
-                <div class="profile-name"><?= htmlspecialchars($username) ?></div>
+                <div class="profile-name"><?= htmlspecialchars($displayUsername) ?></div>
             </div>
             <nav class="sidebar-menu">
                 <ul>
@@ -124,7 +128,7 @@ $control_number = "991234567890";
                     <li><a href="user_dashboard_layout.php?page=view_hostels" class="<?= (($_GET['page'] ?? '') === 'view_hostels') ? 'active' : '' ?>"><i class="bi bi-buildings"></i> <span>View Hostels</span></a></li>
                     <li><a href="user_dashboard_layout.php?page=book_room" class="<?= (($_GET['page'] ?? '') === 'book_room') ? 'active' : '' ?>"><i class="bi bi-calendar-plus"></i> <span>Book Room</span></a></li>
                     <li><a href="user_dashboard_layout.php?page=my_bookings" class="<?= (($_GET['page'] ?? '') === 'my_bookings') ? 'active' : '' ?>"><i class="bi bi-calendar-check"></i> <span>My Bookings</span></a></li>
-                    <li><a href="../logout.php"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a></li>
+                    <li><a href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a></li>
                 </ul>
             </nav>
         </aside>
@@ -139,13 +143,13 @@ $control_number = "991234567890";
                     </div>
                     <div class="user-menu dropdown">
                         <img src="<?= htmlspecialchars($profile_pic) ?>" alt="Profile" class="profile-pic header-user-pic">
-                        <span class="user-name"><?= htmlspecialchars($username) ?></span>
+                        <span class="user-name"><?= htmlspecialchars($displayUsername) ?></span>
                         <a href="#" class="dropdown-toggle" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-caret-down-fill"></i>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
                             <li><a class="dropdown-item" href="user_dashboard_layout.php?page=profile"><i class="bi bi-person"></i> Profile</a></li>
-                            <li><a class="dropdown-item" href="../logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            <li><a class="dropdown-item" href="../auth/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                         </ul>
                     </div>
                 </header>

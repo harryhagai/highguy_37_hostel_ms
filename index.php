@@ -28,6 +28,7 @@ $activeNav = 'home';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
     
     <link rel="stylesheet" href="assets/css/index.css">
 </head>
@@ -50,7 +51,7 @@ $activeNav = 'home';
                         Compare hostels, view key details, and start booking with confidence from one clean student-friendly platform.
                     </p>
                     <div class="hero-actions d-flex flex-wrap gap-3">
-                        <a href="register.php" class="btn btn-hero-primary">
+                        <a href="auth/register.php" class="btn btn-hero-primary">
                             <i class="bi bi-rocket-takeoff me-2"></i>Get Started
                         </a>
                         <a href="#about" class="btn btn-hero-secondary">

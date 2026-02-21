@@ -57,6 +57,8 @@
     document.addEventListener(
         "submit",
         function (event) {
+            if (event.defaultPrevented) return;
+
             var form = event.target;
             if (!(form instanceof HTMLFormElement)) return;
 
@@ -69,6 +71,8 @@
                 }
             }
 
+            if (event.defaultPrevented) return;
+
             var submitter = event.submitter;
             if (!submitter) {
                 submitter = form.querySelector('button[type="submit"], input[type="submit"]');
@@ -76,8 +80,7 @@
             if (submitter && !shouldSkipButton(submitter)) {
                 setLoading(submitter);
             }
-        },
-        true
+        }
     );
 
     document.addEventListener(
@@ -86,14 +89,7 @@
             var link = event.target.closest("a");
             if (link && !shouldSkipLink(link)) {
                 setLoading(link);
-                return;
             }
-
-            var button = event.target.closest("button");
-            if (!button) return;
-            if (button.type === "submit") return;
-            if (shouldSkipButton(button)) return;
-            setLoading(button);
         },
         true
     );

@@ -5,12 +5,14 @@ $activeNav = isset($activeNav) ? $activeNav : '';
 $homeHref = $navPrefix === '' ? '#home' : $navPrefix . '#home';
 $aboutHref = $navPrefix === '' ? '#about' : $navPrefix . '#about';
 $contactHref = $navPrefix === '' ? '#contact' : $navPrefix . '#contact';
+$loginHref = $navPrefix === '' ? 'auth/login.php' : $navPrefix . 'auth/login.php';
+$registerHref = $navPrefix === '' ? 'auth/register.php' : $navPrefix . 'auth/register.php';
 ?>
 <nav class="navbar navbar-expand-lg fixed-top site-header">
     <div class="container">
         <a class="navbar-brand header-brand" href="<?= htmlspecialchars($homeHref) ?>">
-            <span class="header-brand-icon">
-                <i class="bi bi-buildings-fill"></i>
+            <span class="header-brand-icon rounded-circle">
+                <img src="assets/images/logo.png" alt="HostelPro Logo" class="header-brand-logo rounded-circle">
             </span>
             <span class="header-brand-text">
                 <strong>Hostel<span class="brand-pro">Pro</span></strong>
@@ -52,11 +54,11 @@ $contactHref = $navPrefix === '' ? '#contact' : $navPrefix . '#contact';
                 </ul>
 
                 <div class="header-actions d-flex flex-column flex-lg-row gap-2 mt-2 mt-lg-0">
-                    <a class="btn btn-header-outline" href="login.php">
+                    <a class="btn btn-header-outline" href="<?= htmlspecialchars($loginHref) ?>">
                         <i class="bi bi-box-arrow-in-right header-btn-icon" aria-hidden="true"></i>
                         <span>Login</span>
                     </a>
-                    <a class="btn btn-header-solid" href="register.php">
+                    <a class="btn btn-header-solid" href="<?= htmlspecialchars($registerHref) ?>">
                         <i class="bi bi-person-plus header-btn-icon" aria-hidden="true"></i>
                         <span>Create Account</span>
                     </a>

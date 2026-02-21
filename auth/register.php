@@ -1,72 +1,11 @@
 <?php
-// Start session for CSRF and messages
-session_start();
-
-// Include PDO connection (update path if needed)
-require_once __DIR__ . '/config/db_connection.php';
-
-// CSRF token generation and validation
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-// Handle form submission
-$errors = [];
-$username = $email = $phone = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF check
-    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        $errors[] = "Invalid CSRF token.";
-    }
-
-    // Username: letters only
-    $username = trim($_POST['username']);
-    if (!preg_match('/^[A-Za-z]+$/', $username)) {
-        $errors[] = "Username must contain letters only (no spaces or numbers).";
-    }
-
-    // Email: must be @gmail.com
-    $email = trim($_POST['email']);
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/@gmail\.com$/', $email)) {
-        $errors[] = "Email must be a valid @gmail.com address.";
-    }
-
-    // Phone: Tanzania format +2557XXXXXXXX or 07XXXXXXXX
-    $phone = trim($_POST['phone']);
-    if (!preg_match('/^(?:\+2557\d{8}|07\d{8})$/', $phone)) {
-        $errors[] = "Phone number must be in Tanzania format: +2557XXXXXXXX or 07XXXXXXXX.";
-    }
-
-    // Password: min 6 chars
-    $password = $_POST['password'];
-    if (strlen($password) < 6) {
-        $errors[] = "Password must be at least 6 characters.";
-    }
-
-    // If no errors, process registration
-    if (empty($errors)) {
-        // Check for duplicate email/username
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
-        $stmt->execute([$email, $username]);
-        if ($stmt->fetch()) {
-            $errors[] = "Email or Username already exists.";
-        } else {
-            // Hash password securely
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            // Insert user
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, phone, password) VALUES (?, ?, ?, ?)");
-            if ($stmt->execute([$username, $email, $phone, $hashed_password])) {
-                $_SESSION['success'] = "Registration successful! You can now log in.";
-                header("Location: login.php");
-                exit;
-            } else {
-                $errors[] = "Registration failed. Please try again.";
-            }
-        }
-    }
-}
+$authState = require __DIR__ . '/../controllers/auth/register_controller.php';
+$errors = $authState['errors'];
+$username = $authState['username'];
+$email = $authState['email'];
+$phone = $authState['phone'];
+$csrfToken = $authState['csrf_token'];
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="assets/css/register.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="stylesheet" href="../assets/css/register.css">
 </head>
 <body class="auth-body">
     <section class="auth-shell py-4 py-lg-5">
@@ -97,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="auth-guide">
                             <h6 class="auth-guide-title">How to fill this form</h6>
                             <ul class="auth-guide-list mb-0">
-                                <li>Username: letters only, no spaces.</li>
+                                <li>Username: letters only, spaces between words allowed.</li>
                                 <li>Email: must end with <code>@gmail.com</code>.</li>
                                 <li>Phone: use <code>+2557XXXXXXXX</code> or <code>07XXXXXXXX</code>.</li>
                                 <li>Password: minimum 6 characters.</li>
@@ -124,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endif; ?>
 
                         <form method="POST" autocomplete="off" novalidate>
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
                             <div class="mb-3">
                                 <label class="form-label" for="username">Username</label>
@@ -135,11 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         class="form-control"
                                         id="username"
                                         name="username"
-                                        placeholder="Letters only"
+                                        placeholder="Letters and spaces"
                                         value="<?= htmlspecialchars($username) ?>"
                                         required
-                                        pattern="[A-Za-z]+"
-                                        title="Letters only, no spaces or numbers"
+                                        pattern="[A-Za-z]+( [A-Za-z]+)*"
+                                        title="Letters only, spaces between words allowed"
                                     >
                                 </div>
                             </div>
@@ -207,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <a href="login.php" class="auth-link-accent">Sign in</a>
                         </p>
                         <div class="text-center mt-2">
-                            <a href="index.php" class="auth-home-link">
+                            <a href="../index.php" class="auth-home-link">
                                 <i class="bi bi-arrow-left-short"></i> Back to Home
                             </a>
                         </div>
@@ -218,8 +157,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/ui-spinner.js"></script>
+    <script src="../assets/js/ui-spinner.js"></script>
 </body>
 </html>
-
-

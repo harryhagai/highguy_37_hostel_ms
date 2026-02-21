@@ -3,11 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../config/db_connection.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit();
-}
+require_once __DIR__ . '/../permission/role_permission.php';
+rp_require_roles(['user'], '../auth/login.php');
 
 $userId = $_SESSION['user_id'];
 

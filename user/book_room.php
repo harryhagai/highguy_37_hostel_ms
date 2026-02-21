@@ -3,11 +3,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../config/db_connection.php';
+require_once __DIR__ . '/../permission/role_permission.php';
+rp_require_roles(['user'], '../auth/login.php');
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit();
-}
 $userId = $_SESSION['user_id'];
 $hostelId = isset($_GET['hostel_id']) ? intval($_GET['hostel_id']) : 0;
 

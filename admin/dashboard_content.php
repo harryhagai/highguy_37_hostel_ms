@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../permission/role_permission.php';
+rp_require_roles(['admin'], '../auth/login.php');
+
 $state = require __DIR__ . '/../controllers/admin/dashboard_controller.php';
 $total_users = $state['total_users'];
 $total_hostels = $state['total_hostels'];

@@ -139,6 +139,33 @@
     padding: 1rem 1rem 0.7rem;
 }
 
+.users-quick-stats {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.users-mini-stat {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.users-mini-label {
+    color: #64748b;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+}
+
+.users-mini-stat h5 {
+    color: #0f172a;
+    font-weight: 700;
+}
+
 .users-toolbar {
     display: flex;
     align-items: center;
@@ -155,23 +182,52 @@
 
 .users-search-group .input-group-text {
     background: #ffffff;
-    border-color: #dbe5ee;
-    color: #0f766e;
+    border-color: var(--accent, #14b8a6);
+    border-width: 1.5px;
+    color: var(--accent, #14b8a6);
+    border-radius: 12px 0 0 12px;
 }
 
 .users-search-group .form-control,
-.users-filters .form-select {
-    border-color: #dbe5ee;
+.users-filters .form-select,
+.users-filters .form-control {
+    border-color: var(--accent, #14b8a6);
+    border-width: 1.5px;
+    border-radius: 12px;
+}
+
+.users-search-group .form-control {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+}
+
+.users-search-group .btn {
+    border-color: var(--accent, #14b8a6);
+    border-width: 1.5px;
+    color: #0f766e;
+    border-radius: 0 12px 12px 0;
+}
+
+.users-search-group .btn:hover {
+    background: rgba(20, 184, 166, 0.1);
+    border-color: var(--accent, #14b8a6);
+    color: #0f766e;
 }
 
 .users-search-group .form-control:focus,
-.users-filters .form-select:focus {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.14);
+.users-filters .form-select:focus,
+.users-filters .form-control:focus {
+    border-color: var(--accent, #14b8a6);
+    box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.18);
 }
 
 .users-result-count {
     font-weight: 600;
+}
+
+.users-bulk-select {
+    max-width: 220px;
 }
 
 .users-table-wrap {
@@ -179,6 +235,10 @@
     border-radius: 12px;
     overflow: hidden;
     background: #fff;
+}
+
+.users-check-col {
+    width: 42px;
 }
 
 .users-table thead th {
@@ -198,6 +258,36 @@
 
 .users-table tbody tr:hover {
     background: #f8fafc;
+}
+
+.user-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.user-avatar-shell {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex: 0 0 40px;
+    background: #dbeafe;
+    display: grid;
+    place-items: center;
+    border: 1px solid #bfdbfe;
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-avatar-fallback {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1e3a8a;
 }
 
 .user-role-badge {
@@ -220,6 +310,56 @@
     color: #0f766e;
 }
 
+.user-status-badge {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.35rem 0.55rem;
+}
+
+.user-status-active {
+    background: rgba(22, 163, 74, 0.14);
+    border: 1px solid rgba(22, 163, 74, 0.25);
+    color: #166534;
+}
+
+.user-status-inactive {
+    background: rgba(100, 116, 139, 0.14);
+    border: 1px solid rgba(100, 116, 139, 0.28);
+    color: #475569;
+}
+
+.user-status-maintenance {
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.32);
+    color: #92400e;
+}
+
+.user-status-suspended {
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.24);
+    color: #991b1b;
+}
+
+.users-lazy-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.users-lazy-sentinel {
+    height: 1px;
+}
+
+.users-activity-list {
+    list-style: disc;
+    margin-left: 1rem;
+    max-height: 180px;
+    overflow: auto;
+}
+
 .users-modal .modal-content {
     border: 1px solid #e2e8f0;
     border-radius: 14px;
@@ -234,6 +374,213 @@
 .users-modal .modal-title i {
     color: #0f766e;
     margin-right: 0.35rem;
+}
+
+.hostels-page .user-avatar-fallback i {
+    font-size: 0.9rem;
+}
+
+.notices-page .user-avatar-fallback i {
+    font-size: 0.9rem;
+}
+
+.notices-page .notice-preview {
+    display: inline-block;
+    max-width: min(60ch, 62vw);
+}
+
+.notices-page .notice-content-box {
+    white-space: pre-wrap;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.settings-page .settings-photo-card {
+    background: linear-gradient(165deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.settings-page .settings-profile-photo {
+    width: 118px;
+    height: 118px;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.28), 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.settings-page .form-label {
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.88rem;
+}
+
+.hostels-page .hostel-preview-md {
+    width: 108px;
+    height: 108px;
+    object-fit: cover;
+    border: 1px solid #dbe3ee;
+    background: #f8fafc;
+}
+
+.hostels-page .hostel-view-lg {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    display: none;
+}
+
+.rooms-page .room-preview-md,
+#addRoomModal .room-preview-md,
+#editRoomModal .room-preview-md {
+    width: 108px;
+    height: 108px;
+    max-width: 108px;
+    object-fit: cover;
+    object-position: center;
+    border: 1px solid #dbe3ee;
+    background: #f8fafc;
+    display: none;
+    margin-inline: auto;
+}
+
+.rooms-page .room-view-lg,
+#viewRoomModal .room-view-lg {
+    width: 110px;
+    height: 110px;
+    max-width: 110px;
+    object-fit: cover;
+    object-position: center;
+    border: 1px solid #dbe3ee;
+    background: #f8fafc;
+    border-radius: 12px;
+    display: none;
+    margin-inline: auto;
+}
+
+.rooms-page .user-avatar-shell {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+}
+
+.rooms-page .user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.rooms-page .rooms-modal-dialog,
+.rooms-modal-dialog {
+    max-width: 780px;
+}
+
+.rooms-page .rooms-view-dialog,
+.rooms-view-dialog {
+    max-width: 720px;
+}
+
+.beds-page .user-avatar-fallback i {
+    font-size: 0.95rem;
+}
+
+#addRoomModal .modal-body,
+#editRoomModal .modal-body,
+#viewRoomModal .modal-body {
+    overflow-x: hidden;
+}
+
+#addRoomModal .modal-content,
+#editRoomModal .modal-content,
+#viewRoomModal .modal-content {
+    overflow: hidden;
+}
+
+@media (max-width: 767.98px) {
+    .rooms-page .room-preview-md,
+    #addRoomModal .room-preview-md,
+    #editRoomModal .room-preview-md {
+        width: 90px;
+        height: 90px;
+        max-width: 90px;
+    }
+
+    .rooms-page .room-view-lg,
+    #viewRoomModal .room-view-lg {
+        width: 96px;
+        height: 96px;
+        max-width: 96px;
+    }
+
+    .rooms-page .rooms-modal-dialog,
+    .rooms-page .rooms-view-dialog,
+    .rooms-modal-dialog,
+    .rooms-view-dialog {
+        max-width: 100%;
+    }
+}
+
+.hostels-page .users-field-icon,
+.rooms-page .users-field-icon,
+.beds-page .users-field-icon,
+.notices-page .users-field-icon {
+    position: relative;
+}
+
+.hostels-page .users-field-icon > i,
+.rooms-page .users-field-icon > i,
+.beds-page .users-field-icon > i,
+.notices-page .users-field-icon > i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent, #14b8a6);
+    font-size: 0.92rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.hostels-page .users-field-icon .form-control,
+.hostels-page .users-field-icon .form-select,
+.rooms-page .users-field-icon .form-control,
+.rooms-page .users-field-icon .form-select,
+.beds-page .users-field-icon .form-control,
+.beds-page .users-field-icon .form-select,
+.notices-page .users-field-icon .form-control,
+.notices-page .users-field-icon .form-select {
+    padding-left: 34px;
+}
+
+.hostels-page .users-field-search .form-control,
+.rooms-page .users-field-search .form-control,
+.beds-page .users-field-search .form-control,
+.notices-page .users-field-search .form-control {
+    padding-right: 34px;
+}
+
+.hostels-page .users-field-clear,
+.rooms-page .users-field-clear,
+.beds-page .users-field-clear,
+.notices-page .users-field-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    padding: 0;
+    line-height: 1;
+    z-index: 2;
+}
+
+.hostels-page .users-field-clear:hover,
+.rooms-page .users-field-clear:hover,
+.beds-page .users-field-clear:hover,
+.notices-page .users-field-clear:hover {
+    color: #0f766e;
 }
 
 @media (max-width: 991.98px) {
@@ -254,6 +601,10 @@
 
     .users-toolbar {
         flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .users-lazy-bar {
         align-items: flex-start;
     }
 

@@ -3,6 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../config/db_connection.php';
+require_once __DIR__ . '/../permission/role_permission.php';
+rp_require_roles(['user'], '../auth/login.php');
 
 // Fetch hostels and their room stats
 $stmt = $pdo->query("
@@ -25,6 +27,7 @@ $hostels = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
     
     <link rel="stylesheet" href="../assets/css/user-view-hostels.css">
 </head>
@@ -36,6 +39,15 @@ $hostels = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </h2>
         <div class="row g-4">
             <?php foreach ($hostels as $hostel): ?>
+                <?php
+                $genderValue = strtolower(trim((string)($hostel['gender'] ?? 'all')));
+                if (!in_array($genderValue, ['male', 'female', 'all'], true)) {
+                    $genderValue = 'all';
+                }
+                $genderLabel = $genderValue === 'male'
+                    ? 'Male Only'
+                    : ($genderValue === 'female' ? 'Female Only' : 'All Genders');
+                ?>
                 <div class="col-lg-6 col-md-6 col-12 d-flex">
                     <div class="hostel-card w-100 position-relative">
                         <div class="hostel-image-wrapper">
@@ -48,6 +60,9 @@ $hostels = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="hostel-title">
                                 <i class="bi bi-house-door-fill"></i>
                                 <?= htmlspecialchars($hostel['name']) ?>
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-2">
+                                    <?= htmlspecialchars($genderLabel) ?>
+                                </span>
                             </div>
                             <div class="hostel-location">
                                 <i class="bi bi-geo-alt-fill"></i>
@@ -83,7 +98,9 @@ $hostels = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                         "description" => $hostel["description"],
                                                         "image" => "../" . $hostel["hostel_image"],
                                                         "total_rooms" => $hostel["total_rooms"],
-                                                        "free_rooms" => $hostel["free_rooms"]
+                                                        "free_rooms" => $hostel["free_rooms"],
+                                                        "gender" => $genderValue,
+                                                        "gender_label" => $genderLabel
                                                     ])) ?>'>
                                     <i class="bi bi-eye"></i> View Details
                                 </button>
@@ -122,6 +139,7 @@ $hostels = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <h4 id="modalHostelName" class="mb-2 modal-hostel-name"></h4>
                             <!-- Location as link to open map modal -->
                             <div id="modalHostelLocation" class="mb-2 text-muted modal-hostel-location"></div>
+                            <div class="mb-2"><b>Gender:</b> <span id="modalHostelGender"></span></div>
                             <div id="modalHostelDesc" class="mb-3 modal-hostel-desc"></div>
                             <!-- Google Map Embed (small preview) -->
                             <div id="modalHostelMap" class="modal-hostel-map"></div>
