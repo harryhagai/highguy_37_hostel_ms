@@ -1,6 +1,8 @@
 <?php
 $authState = require __DIR__ . '/../controllers/auth/login_controller.php';
 $errors = $authState['errors'];
+$generalErrors = $authState['general_errors'] ?? [];
+$fieldErrors = $authState['field_errors'] ?? [];
 $email = $authState['email'];
 $rememberMe = !empty($authState['remember_me']);
 $csrfToken = $authState['csrf_token'];
@@ -57,10 +59,10 @@ $successMessage = $authState['success_message'];
                             </div>
                         <?php endif; ?>
 
-                        <?php if (!empty($errors)): ?>
+                        <?php if (!empty($generalErrors)): ?>
                             <div class="alert alert-danger" role="alert">
                                 <ul class="mb-0 ps-3">
-                                    <?php foreach ($errors as $err): ?>
+                                    <?php foreach ($generalErrors as $err): ?>
                                         <li><?= htmlspecialchars($err) ?></li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -72,33 +74,47 @@ $successMessage = $authState['success_message'];
 
                             <div class="mb-3">
                                 <label class="form-label" for="email">Email</label>
-                                <div class="input-group input-group-auth">
+                                <div class="input-group input-group-auth has-validation">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                     <input
                                         type="email"
-                                        class="form-control"
+                                        class="form-control<?= !empty($fieldErrors['email']) ? ' is-invalid' : '' ?>"
                                         id="email"
                                         name="email"
                                         placeholder="name@gmail.com"
                                         value="<?= htmlspecialchars($email) ?>"
                                         required
+                                        data-field="email"
                                     >
+                                    <span class="btn-password-toggle email-trailing-icon" aria-hidden="true">
+                                        <i class="bi bi-envelope-at"></i>
+                                    </span>
+                                    <div class="invalid-feedback<?= !empty($fieldErrors['email']) ? ' d-block' : '' ?>" id="emailFeedback">
+                                        <?= htmlspecialchars((string)($fieldErrors['email'] ?? 'Please enter a valid email address.')) ?>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="mb-4">
                                 <label class="form-label" for="password">Password</label>
-                                <div class="input-group input-group-auth">
+                                <div class="input-group input-group-auth has-validation">
                                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                                     <input
                                         type="password"
-                                        class="form-control"
+                                        class="form-control<?= !empty($fieldErrors['password']) ? ' is-invalid' : '' ?>"
                                         id="password"
                                         name="password"
                                         placeholder="Enter your password"
                                         required
                                         autocomplete="current-password"
+                                        data-field="password"
                                     >
+                                    <button type="button" class="btn btn-password-toggle" id="togglePassword" aria-label="Show password">
+                                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                    </button>
+                                    <div class="invalid-feedback<?= !empty($fieldErrors['password']) ? ' d-block' : '' ?>" id="passwordFeedback">
+                                        <?= htmlspecialchars((string)($fieldErrors['password'] ?? 'Please enter your password.')) ?>
+                                    </div>
                                 </div>
                             </div>
 
@@ -136,5 +152,6 @@ $successMessage = $authState['success_message'];
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/ui-spinner.js"></script>
+    <script src="../assets/js/login.js"></script>
 </body>
 </html>

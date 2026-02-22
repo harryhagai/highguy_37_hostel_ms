@@ -27,6 +27,14 @@
         });
     }
 
+    function showWarning(message) {
+        if (window.AdminAlerts && typeof window.AdminAlerts.warn === 'function') {
+            window.AdminAlerts.warn(message);
+            return;
+        }
+        window.alert(message);
+    }
+
     function fillUserView(user) {
         var setText = function (id, value) {
             var el = document.getElementById(id);
@@ -37,6 +45,7 @@
         setText('viewUserEmail', user.email);
         setText('viewUserPhone', user.phone || '-');
         setText('viewUserRole', user.role);
+        setText('viewUserGender', user.gender_label || '-');
         setText('viewUserStatus', user.status || '-');
         setText('viewUserLastLogin', user.last_login_display || '-');
         setText('viewUserCreated', user.created_at_display || '-');
@@ -67,6 +76,7 @@
         setValue('editUserUsername', user.username, '');
         setValue('editUserEmail', user.email, '');
         setValue('editUserPhone', user.phone, '');
+        setValue('editUserGender', user.gender, '');
         setValue('editUserRole', user.role, 'user');
         setValue('editUserStatus', user.status, 'active');
     }
@@ -298,7 +308,8 @@
             var action = bulkActionType ? bulkActionType.value : '';
             if (!action || !ids.length) {
                 event.preventDefault();
-                window.alert('Select at least one user and choose a bulk action.');
+                bulkForm.dataset.skipSwalConfirm = '1';
+                showWarning('Select at least one user and choose a bulk action.');
                 return;
             }
 

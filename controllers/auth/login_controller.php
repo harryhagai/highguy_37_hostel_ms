@@ -94,9 +94,20 @@ try {
 }
 
 $errors = [];
+$generalErrors = [];
+$fieldErrors = [
+    'email' => '',
+    'password' => '',
+];
 $email = '';
 $successMessage = null;
 $rememberMe = false;
+
+$setFieldError = static function (array &$errorBag, string $field, string $message): void {
+    if (isset($errorBag[$field]) && $errorBag[$field] === '') {
+        $errorBag[$field] = $message;
+    }
+};
 
 if (!empty($_SESSION['success'])) {
     $successMessage = (string) $_SESSION['success'];
@@ -106,7 +117,7 @@ if (!empty($_SESSION['success'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $submittedToken = (string)($_POST['csrf_token'] ?? '');
     if ($submittedToken === '' || !hash_equals($_SESSION['csrf_token'], $submittedToken)) {
-        $errors[] = 'Invalid CSRF token.';
+        $generalErrors[] = 'Invalid CSRF token.';
     }
 
     $email = trim((string)($_POST['email'] ?? ''));
@@ -114,13 +125,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rememberMe = isset($_POST['remember_me']) && $_POST['remember_me'] === '1';
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address.';
+        $setFieldError($fieldErrors, 'email', 'Please enter a valid email address.');
     }
     if ($password === '') {
-        $errors[] = 'Please enter your password.';
+        $setFieldError($fieldErrors, 'password', 'Please enter your password.');
     }
 
-    if (empty($errors)) {
+    $hasFieldErrors = implode('', $fieldErrors) !== '';
+    if (!$hasFieldErrors && empty($generalErrors)) {
         $selectSql = 'SELECT id, username, email, password, role';
         if ($userColumnExists($pdo, 'status')) {
             $selectSql .= ', status';
@@ -134,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $status = strtolower(trim((string)($user['status'] ?? 'active')));
             if ($status === 'suspended') {
-                $errors[] = 'Your account is suspended. Contact admin.';
+                $generalErrors[] = 'Your account is suspended. Contact admin.';
             } else {
                 $setSessionFromUser($user);
                 $markLogin($pdo, (int)$user['id'], true);
@@ -148,22 +160,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         auth_remember_revoke_current_token($pdo);
                     }
                 } catch (Throwable $e) {
-                    $errors[] = 'Unable to complete remember me setup. Please try again.';
+                    $generalErrors[] = 'Unable to complete remember me setup. Please try again.';
                     $_SESSION = [];
                 }
 
-                if (empty($errors)) {
+                if (empty($generalErrors) && implode('', $fieldErrors) === '') {
                     $redirectByRole((string)$user['role']);
                 }
             }
         } else {
-            $errors[] = 'Invalid email or password.';
+            $setFieldError($fieldErrors, 'email', 'Invalid email or password.');
+            $setFieldError($fieldErrors, 'password', 'Invalid email or password.');
         }
     }
 }
 
+$errors = array_values(array_filter(array_merge($generalErrors, array_values($fieldErrors))));
+
 return [
     'errors' => $errors,
+    'general_errors' => $generalErrors,
+    'field_errors' => $fieldErrors,
     'email' => $email,
     'remember_me' => $rememberMe,
     'csrf_token' => $_SESSION['csrf_token'],

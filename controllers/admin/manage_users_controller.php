@@ -4,11 +4,20 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
 }
 
 require_once __DIR__ . '/../common/activity_logger.php';
+require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
 
 $errors = [];
 $success = '';
 $openModal = '';
 $editFormData = null;
+
+$flash = admin_prg_consume('manage_users');
+if (is_array($flash)) {
+    $errors = is_array($flash['errors'] ?? null) ? $flash['errors'] : [];
+    $success = (string)($flash['success'] ?? '');
+    $openModal = (string)($flash['openModal'] ?? '');
+    $editFormData = is_array($flash['editFormData'] ?? null) ? $flash['editFormData'] : null;
+}
 
 $actorUserId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
@@ -47,6 +56,15 @@ $hasStatusColumn = $ensureUserColumn($pdo, 'status', "ENUM('active','inactive','
 $hasLastLoginColumn = $ensureUserColumn($pdo, 'last_login_at', 'DATETIME NULL');
 $hasLastSeenColumn = $ensureUserColumn($pdo, 'last_seen_at', 'DATETIME NULL');
 $hasProfilePhotoColumn = $userColumnExists($pdo, 'profile_photo');
+$hasGenderColumn = $userColumnExists($pdo, 'gender');
+
+$normalizeGender = static function (?string $value): string {
+    $gender = strtolower(trim((string)$value));
+    if (!in_array($gender, ['male', 'female'], true)) {
+        return '';
+    }
+    return $gender;
+};
 
 $countAdmins = static function (PDO $db): int {
     $stmt = $db->query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
@@ -157,6 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
+        $gender = $normalizeGender($_POST['gender'] ?? '');
         $role = ($_POST['role'] ?? 'user') === 'admin' ? 'admin' : 'user';
         $status = strtolower(trim((string)($_POST['status'] ?? 'active')));
         $password = $_POST['password'] ?? '';
@@ -169,6 +188,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (strlen($password) < 6) {
             $errors[] = 'Password must be at least 6 characters.';
+        }
+        if ($hasGenderColumn && $gender === '') {
+            $errors[] = 'Select a valid gender (Male or Female).';
         }
         if ($hasStatusColumn && !in_array($status, ['active', 'inactive', 'suspended'], true)) {
             $errors[] = 'Invalid status selected.';
@@ -183,11 +205,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($errors)) {
             $hashed = password_hash($password, PASSWORD_DEFAULT);
             if ($hasStatusColumn) {
-                $stmt = $pdo->prepare('INSERT INTO users (username, email, password, phone, role, status) VALUES (?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$username, $email, $hashed, $phone, $role, $status]);
+                if ($hasGenderColumn) {
+                    $stmt = $pdo->prepare('INSERT INTO users (username, email, password, phone, gender, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                    $stmt->execute([$username, $email, $hashed, $phone, $gender, $role, $status]);
+                } else {
+                    $stmt = $pdo->prepare('INSERT INTO users (username, email, password, phone, role, status) VALUES (?, ?, ?, ?, ?, ?)');
+                    $stmt->execute([$username, $email, $hashed, $phone, $role, $status]);
+                }
             } else {
-                $stmt = $pdo->prepare('INSERT INTO users (username, email, password, phone, role) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([$username, $email, $hashed, $phone, $role]);
+                if ($hasGenderColumn) {
+                    $stmt = $pdo->prepare('INSERT INTO users (username, email, password, phone, gender, role) VALUES (?, ?, ?, ?, ?, ?)');
+                    $stmt->execute([$username, $email, $hashed, $phone, $gender, $role]);
+                } else {
+                    $stmt = $pdo->prepare('INSERT INTO users (username, email, password, phone, role) VALUES (?, ?, ?, ?, ?)');
+                    $stmt->execute([$username, $email, $hashed, $phone, $role]);
+                }
             }
             $newUserId = (int)$pdo->lastInsertId();
             activity_log($pdo, $newUserId, 'user_created', $actorUserId, ['role' => $role]);
@@ -202,6 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
+        $gender = $normalizeGender($_POST['gender'] ?? '');
         $role = ($_POST['role'] ?? 'user') === 'admin' ? 'admin' : 'user';
         $status = strtolower(trim((string)($_POST['status'] ?? 'active')));
         $password = $_POST['password'] ?? '';
@@ -221,6 +254,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($password !== '' && strlen($password) < 6) {
             $errors[] = 'Password must be at least 6 characters.';
+        }
+        if ($hasGenderColumn && $gender === '') {
+            $errors[] = 'Select a valid gender (Male or Female).';
         }
         if ($hasStatusColumn && !in_array($status, ['active', 'inactive', 'suspended'], true)) {
             $errors[] = 'Invalid status selected.';
@@ -244,19 +280,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($password !== '') {
                 $hashed = password_hash($password, PASSWORD_DEFAULT);
                 if ($hasStatusColumn) {
-                    $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ?, status = ?, password = ? WHERE id = ?');
-                    $stmt->execute([$username, $email, $phone, $role, $status, $hashed, $id]);
+                    if ($hasGenderColumn) {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, gender = ?, role = ?, status = ?, password = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $gender, $role, $status, $hashed, $id]);
+                    } else {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ?, status = ?, password = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $role, $status, $hashed, $id]);
+                    }
                 } else {
-                    $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ?, password = ? WHERE id = ?');
-                    $stmt->execute([$username, $email, $phone, $role, $hashed, $id]);
+                    if ($hasGenderColumn) {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, gender = ?, role = ?, password = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $gender, $role, $hashed, $id]);
+                    } else {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ?, password = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $role, $hashed, $id]);
+                    }
                 }
             } else {
                 if ($hasStatusColumn) {
-                    $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ?, status = ? WHERE id = ?');
-                    $stmt->execute([$username, $email, $phone, $role, $status, $id]);
+                    if ($hasGenderColumn) {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, gender = ?, role = ?, status = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $gender, $role, $status, $id]);
+                    } else {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ?, status = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $role, $status, $id]);
+                    }
                 } else {
-                    $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ? WHERE id = ?');
-                    $stmt->execute([$username, $email, $phone, $role, $id]);
+                    if ($hasGenderColumn) {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, gender = ?, role = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $gender, $role, $id]);
+                    } else {
+                        $stmt = $pdo->prepare('UPDATE users SET username = ?, email = ?, phone = ?, role = ? WHERE id = ?');
+                        $stmt->execute([$username, $email, $phone, $role, $id]);
+                    }
                 }
             }
             activity_log($pdo, $id, 'user_updated', $actorUserId, ['role' => $role, 'status' => $status]);
@@ -268,6 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'username' => $username,
                 'email' => $email,
                 'phone' => $phone,
+                'gender' => $gender,
                 'role' => $role,
                 'status' => $status,
             ];
@@ -400,9 +457,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+
+    admin_prg_redirect('manage_users', [
+        'errors' => $errors,
+        'success' => $success,
+        'openModal' => $openModal,
+        'editFormData' => $editFormData,
+    ]);
 }
 
 $selectColumns = ['id', 'username', 'email', 'phone', 'role', 'created_at'];
+if ($hasGenderColumn) {
+    $selectColumns[] = 'gender';
+}
 if ($hasStatusColumn) {
     $selectColumns[] = 'status';
 }
@@ -440,6 +507,10 @@ $nowMinus15 = strtotime('-15 minutes');
 
 foreach ($users as &$user) {
     $user['role'] = (($user['role'] ?? 'user') === 'admin') ? 'admin' : 'user';
+    $user['gender'] = $normalizeGender($user['gender'] ?? '');
+    $user['gender_label'] = $user['gender'] === 'male'
+        ? 'Male'
+        : ($user['gender'] === 'female' ? 'Female' : '-');
     $user['status'] = $deriveStatus($user);
     $user['avatar_url'] = $avatarPath($user);
     $user['avatar_initials'] = $initials((string)($user['username'] ?? ''));
@@ -479,5 +550,6 @@ return [
         'status' => $hasStatusColumn,
         'last_login' => $hasLastLoginColumn,
         'last_seen' => $hasLastSeenColumn,
+        'gender' => $hasGenderColumn,
     ],
 ];

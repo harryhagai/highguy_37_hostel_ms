@@ -1,0 +1,30 @@
+body.user-dashboard-theme {
+    --accent: #0ea5e9;
+    --accent-soft: rgba(14, 165, 233, 0.12);
+    --page-bg: #f0f6ff;
+}
+
+body.user-dashboard-theme .header-title i {
+    color: var(--accent);
+}
+
+body.user-dashboard-theme .icon-btn:hover,
+body.user-dashboard-theme .profile-trigger:hover {
+    background: #e0f2fe;
+}
+
+body.user-dashboard-theme .sidebar .sidebar-menu a.active,
+body.user-dashboard-theme .sidebar .sidebar-menu a:hover,
+body.user-dashboard-theme .sidebar-footer a.active,
+body.user-dashboard-theme .sidebar-footer a:hover {
+    color: #0369a1;
+    background: var(--accent-soft);
+}
+
+body.user-dashboard-theme .sidebar .profile-name {
+    font-size: 0.9rem;
+}
+
+body.user-dashboard-theme .dashboard-card {
+    border: 1px solid #e2e8f0;
+}

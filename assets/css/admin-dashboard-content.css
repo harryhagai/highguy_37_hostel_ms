@@ -376,6 +376,135 @@
     margin-right: 0.35rem;
 }
 
+body .modal {
+    z-index: 1300;
+}
+
+body .modal-backdrop {
+    z-index: 1290;
+}
+
+.admin-swal-popup.swal2-popup {
+    width: min(24rem, calc(100vw - 1.25rem));
+    padding: 0.85rem 0.9rem;
+    border-radius: 12px;
+}
+
+.admin-swal-popup .swal2-title {
+    font-size: 1rem;
+    margin: 0.15rem 0 0.4rem;
+}
+
+.admin-swal-popup .swal2-html-container,
+.admin-swal-popup .swal2-content {
+    font-size: 0.87rem;
+    margin: 0.15rem 0 0;
+}
+
+.admin-swal-popup .swal2-icon {
+    width: 3em;
+    height: 3em;
+    margin: 0.25rem auto 0.45rem;
+}
+
+.admin-swal-popup .swal2-icon .bi {
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.admin-swal-popup .swal2-actions {
+    margin-top: 0.85rem;
+    gap: 0.45rem;
+}
+
+.admin-swal-popup .swal2-styled {
+    padding: 0.38rem 0.72rem;
+    font-size: 0.82rem;
+}
+
+.admin-swal-popup .swal2-cancel {
+    background: #e2e8f0 !important;
+    color: #334155 !important;
+}
+
+.rooms-page .users-modal .modal-dialog,
+.beds-page .users-modal .modal-dialog {
+    --bs-modal-width: 700px;
+}
+
+.rooms-page .users-modal .modal-dialog.modal-bulk-wide,
+.beds-page .users-modal .modal-dialog.modal-bulk-wide {
+    --bs-modal-width: 1040px;
+    max-width: min(1040px, 96vw);
+}
+
+.rooms-page .users-modal .modal-content,
+.beds-page .users-modal .modal-content {
+    font-size: 0.9rem;
+}
+
+.rooms-page .users-modal .modal-header,
+.rooms-page .users-modal .modal-body,
+.rooms-page .users-modal .modal-footer,
+.beds-page .users-modal .modal-header,
+.beds-page .users-modal .modal-body,
+.beds-page .users-modal .modal-footer {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+}
+
+.rooms-page .users-modal .modal-header,
+.beds-page .users-modal .modal-header {
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+}
+
+.rooms-page .users-modal .modal-body,
+.beds-page .users-modal .modal-body {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.rooms-page .users-modal .modal-footer,
+.beds-page .users-modal .modal-footer {
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    gap: 0.45rem;
+}
+
+.rooms-page .users-modal .form-label,
+.beds-page .users-modal .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.rooms-page .users-modal .form-control,
+.rooms-page .users-modal .form-select,
+.beds-page .users-modal .form-control,
+.beds-page .users-modal .form-select {
+    font-size: 0.86rem;
+    padding-top: 0.36rem;
+    padding-bottom: 0.36rem;
+}
+
+.rooms-page .users-modal .row.g-3,
+.beds-page .users-modal .row.g-3 {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.62rem;
+}
+
+.rooms-page .users-modal .border.rounded-3,
+.beds-page .users-modal .border.rounded-3 {
+    padding: 0.75rem !important;
+    height: auto !important;
+}
+
+.rooms-page .users-modal h6,
+.beds-page .users-modal h6 {
+    font-size: 0.86rem;
+    margin-bottom: 0.55rem !important;
+}
+
 .hostels-page .user-avatar-fallback i {
     font-size: 0.9rem;
 }
@@ -385,14 +514,35 @@
 }
 
 .notices-page .notice-preview {
-    display: inline-block;
-    max-width: min(60ch, 62vw);
+    display: block;
+    max-width: min(36ch, 34vw);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notices-page .users-table-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.notices-page #noticesTable {
+    min-width: 980px;
 }
 
 .notices-page .notice-content-box {
     white-space: pre-wrap;
     max-height: 260px;
     overflow-y: auto;
+}
+
+.notices-page #noticesTable .notice-actions-cell {
+    min-width: 250px;
+    white-space: nowrap;
+}
+
+.notices-page #noticesTable .notice-actions-cell .btn {
+    white-space: nowrap;
 }
 
 .settings-page .settings-photo-card {
@@ -586,6 +736,12 @@
 @media (max-width: 991.98px) {
     .dashboard-analytics-grid {
         grid-template-columns: 1fr;
+    }
+
+    .rooms-page .users-modal .modal-dialog.modal-bulk-wide,
+    .beds-page .users-modal .modal-dialog.modal-bulk-wide {
+        --bs-modal-width: 96vw;
+        max-width: 96vw;
     }
 }
 

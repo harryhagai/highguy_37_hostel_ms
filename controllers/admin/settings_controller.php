@@ -2,9 +2,16 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
+require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
 
 $errors = [];
 $success = '';
+
+$flash = admin_prg_consume('settings');
+if (is_array($flash)) {
+    $errors = is_array($flash['errors'] ?? null) ? $flash['errors'] : [];
+    $success = (string)($flash['success'] ?? '');
+}
 
 $columnExists = static function (PDO $db, string $table, string $column): bool {
     static $cache = [];
@@ -244,6 +251,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+
+    admin_prg_redirect('settings', [
+        'errors' => $errors,
+        'success' => $success,
+    ]);
 
     $profile = $fetchAdminProfile($pdo, $adminId, $hasPhoneColumn, $hasProfilePhotoColumn);
 }

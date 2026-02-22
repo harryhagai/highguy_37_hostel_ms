@@ -16,6 +16,7 @@
             background: rgba(255, 255, 255, 0.82);
             border-bottom: 1px solid rgba(148, 163, 184, 0.2);
             backdrop-filter: blur(14px);
+            padding: 0.38rem 0;
             transition: background 0.25s ease, box-shadow 0.25s ease;
         }
         .site-header.is-scrolled {
@@ -27,6 +28,7 @@
             align-items: center;
             gap: 0.9rem;
             text-decoration: none;
+            padding: 0.2rem 0;
             margin-right: 1.4rem;
         }
         .header-brand-icon {
@@ -150,9 +152,9 @@
         }
         .btn-header-outline:hover,
         .btn-header-outline:focus {
-            background: #ffffff;
-            color: var(--aqua-dark);
-            border-color: var(--aqua-dark);
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
         }
         .btn-header-solid {
             border: 1px solid #0f172a;
@@ -162,9 +164,9 @@
         }
         .btn-header-solid:hover,
         .btn-header-solid:focus {
-            background: var(--aqua-dark);
-            border-color: var(--aqua-dark);
-            color: #fff;
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #1f2a37;
         }
         .header-toggler {
             border: 1px solid rgba(100, 116, 139, 0.35);
@@ -238,8 +240,8 @@
             text-transform: uppercase;
         }
         .hero-heading {
-            font-size: clamp(2rem, 4.4vw, 3.55rem);
-            line-height: 1.08;
+            font-size: clamp(2rem, 4.1vw, 3.25rem);
+            line-height: 1.14;
             font-weight: 800;
             color: #1f2a37;
             max-width: 14ch;
@@ -559,6 +561,446 @@
             transition: transform 0.3s, color 0.3s;
             animation: iconPop 1.2s;
         }
+        /* Public Hostels Section */
+        .public-hostels-section {
+            background: linear-gradient(180deg, #ffffff 0%, #f3f9fd 100%);
+        }
+        .public-hostels-intro {
+            max-width: 760px;
+            margin-bottom: 2rem;
+        }
+        .public-hostels-title {
+            margin-bottom: 0.85rem;
+            font-size: clamp(1.75rem, 3vw, 2.25rem);
+            line-height: 1.2;
+        }
+        .public-hostels-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.9rem;
+        }
+        .public-mini-stat {
+            background: #fff;
+            border: 1px solid #dce8ef;
+            border-radius: 1rem;
+            padding: 0.95rem 0.95rem;
+            box-shadow: 0 10px 22px rgba(35, 49, 66, 0.06);
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+        }
+        .public-mini-stat:hover {
+            transform: translateY(-4px);
+            border-color: #b8e8eb;
+            box-shadow: 0 16px 30px rgba(35, 49, 66, 0.1);
+        }
+        .public-mini-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.7rem;
+            margin-bottom: 0.55rem;
+            background: #dff7f8;
+            color: var(--aqua-dark);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+        .public-mini-label {
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #72869a;
+            font-weight: 700;
+        }
+        .public-hostels-filter-card {
+            border-radius: 1.1rem;
+            border: 1px solid #dce8ef;
+            background: #fff;
+            padding: 0.95rem;
+            box-shadow: 0 12px 24px rgba(35, 49, 66, 0.05);
+        }
+        .public-filter-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #607486;
+            margin-bottom: 0.32rem;
+            display: block;
+        }
+        .public-field-wrap {
+            position: relative;
+        }
+        .public-field-wrap i {
+            position: absolute;
+            left: 0.72rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8aa0b3;
+            font-size: 0.86rem;
+            pointer-events: none;
+        }
+        .public-filter-control {
+            border: 1px solid #d8e2ea;
+            border-radius: 0.78rem;
+            background: #f8fbfd;
+            color: #334155;
+            font-size: 0.92rem;
+            min-height: 2.45rem;
+            padding-left: 2.08rem;
+        }
+        .public-filter-control:focus {
+            border-color: var(--aqua);
+            box-shadow: 0 0 0 0.18rem rgba(28, 202, 216, 0.15);
+            background: #fff;
+        }
+        .public-filter-actions {
+            margin-top: 0.72rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .public-filter-results {
+            font-size: 0.86rem;
+            color: #5f7182;
+            font-weight: 600;
+        }
+        .public-hostels-carousel-shell {
+            position: relative;
+            padding: 0 0.35rem;
+        }
+        .public-hostels-grid {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.05rem;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
+            padding: 0.2rem 0.15rem 0.65rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .public-hostels-grid::-webkit-scrollbar {
+            display: none;
+        }
+        .public-hostel-card {
+            background: #fff;
+            border: 1px solid #dce8ef;
+            border-radius: 1rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 14px 28px rgba(35, 49, 66, 0.08);
+            transition: transform 0.28s ease, box-shadow 0.28s ease;
+            flex: 0 0 calc((100% - 2.1rem) / 3);
+            min-width: 270px;
+            scroll-snap-align: start;
+        }
+        .public-hostel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 36px rgba(35, 49, 66, 0.15);
+        }
+        .public-hostel-media {
+            position: relative;
+            overflow: hidden;
+        }
+        .public-hostel-image {
+            width: 100%;
+            height: 208px;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            transition: transform 0.35s ease;
+        }
+        .public-hostel-image.public-hostel-detail-trigger {
+            cursor: pointer;
+        }
+        .public-hostel-image.public-hostel-detail-trigger:focus {
+            outline: 2px solid #fff;
+            outline-offset: -4px;
+        }
+        .public-hostel-card:hover .public-hostel-image {
+            transform: scale(1.045);
+        }
+        .public-hostel-top-badges {
+            position: absolute;
+            top: 0.62rem;
+            left: 0.62rem;
+            right: 0.62rem;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .public-hostel-price-badge,
+        .public-hostel-rating-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            line-height: 1.2;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 0.34rem 0.58rem;
+        }
+        .public-hostel-price-badge {
+            background: rgba(255, 255, 255, 0.88);
+            color: #1f2a37;
+            border: 1px solid rgba(255, 255, 255, 0.95);
+        }
+        .public-hostel-rating-badge {
+            background: rgba(18, 34, 51, 0.74);
+            color: #fef6ce;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+        }
+        .public-hostel-full-badge {
+            position: absolute;
+            top: 2.5rem;
+            right: 0.62rem;
+            z-index: 3;
+        }
+        .public-hostel-gender-badge {
+            position: absolute;
+            top: 2.5rem;
+            left: 0.62rem;
+            z-index: 3;
+        }
+        .public-hostel-image-overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 1.45rem 0.78rem 0.72rem;
+            color: #fff;
+            background: linear-gradient(180deg, rgba(2, 6, 23, 0.04) 0%, rgba(2, 6, 23, 0.82) 100%);
+        }
+        .public-hostel-image-overlay h6 {
+            font-size: 0.98rem;
+            font-weight: 700;
+            line-height: 1.25;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+        .public-hostel-image-overlay small {
+            font-size: 0.76rem;
+            opacity: 0.96;
+        }
+        .public-hostel-map-trigger {
+            font-size: 0.76rem;
+            color: #fff;
+            opacity: 0.98;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            text-align: left;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .public-hostel-map-trigger:hover,
+        .public-hostel-map-trigger:focus {
+            color: #fff;
+            opacity: 1;
+        }
+        .public-hostel-map-trigger:focus {
+            outline: 1px dashed rgba(255, 255, 255, 0.8);
+            outline-offset: 2px;
+        }
+        .public-hostel-body {
+            padding: 0.92rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .public-hostel-description {
+            color: #4b5f72;
+            font-size: 0.9rem;
+            line-height: 1.54;
+            min-height: 3.9rem;
+        }
+        .public-hostel-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.62rem 0.85rem;
+            color: #435568;
+            font-size: 0.86rem;
+        }
+        .public-hostel-link {
+            width: max-content;
+            margin-top: auto;
+        }
+        .public-hostel-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+            width: 100%;
+        }
+        .public-hostel-actions .btn {
+            flex: 1 1 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+        .public-hostel-actions .btn.disabled,
+        .public-hostel-actions .btn:disabled,
+        .public-hostel-actions .btn[aria-disabled="true"] {
+            background: #9ca3af;
+            border-color: #9ca3af;
+            color: #fff;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .public-hostel-actions .btn.disabled i,
+        .public-hostel-actions .btn:disabled i,
+        .public-hostel-actions .btn[aria-disabled="true"] i {
+            color: #fff;
+        }
+        .public-hostel-actions .btn:not(.disabled):not(:disabled):not([aria-disabled="true"]):hover,
+        .public-hostel-actions .btn:not(.disabled):not(:disabled):not([aria-disabled="true"]):focus {
+            background: #000;
+            border-color: #000;
+            color: #fff;
+        }
+        .public-hostel-actions .btn:not(.disabled):not(:disabled):not([aria-disabled="true"]):hover i,
+        .public-hostel-actions .btn:not(.disabled):not(:disabled):not([aria-disabled="true"]):focus i {
+            color: #fff;
+        }
+        .public-catalog-btn:hover,
+        .public-catalog-btn:focus {
+            background: #000;
+            border-color: #000;
+            color: #fff;
+        }
+        .public-catalog-btn:hover i,
+        .public-catalog-btn:focus i {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.45);
+            background: transparent;
+        }
+        .hostel-detail-modal-content {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.2);
+        }
+        .hostel-detail-image {
+            width: 100%;
+            max-height: 320px;
+            border-radius: 0.85rem;
+            object-fit: cover;
+            object-position: center;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .hostel-detail-map-btn {
+            color: var(--aqua-dark);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .hostel-detail-map-btn:hover,
+        .hostel-detail-map-btn:focus {
+            color: #000;
+        }
+        .hostel-detail-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem;
+        }
+        .hostel-detail-stat {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.7rem;
+            background: #f8fafc;
+            padding: 0.62rem 0.72rem;
+        }
+        .hostel-detail-stat .label {
+            display: block;
+            color: #64748b;
+            font-size: 0.76rem;
+            margin-bottom: 0.2rem;
+        }
+        .hostel-detail-stat strong {
+            color: #0f172a;
+            font-size: 0.95rem;
+        }
+        .hostel-detail-rooms-table thead th {
+            white-space: nowrap;
+            color: #334155;
+            font-size: 0.78rem;
+        }
+        .hostel-detail-rooms-table tbody td {
+            font-size: 0.84rem;
+            color: #334155;
+        }
+        .hostel-map-frame {
+            width: 100%;
+            min-height: 360px;
+            border: 0;
+            border-radius: 0.75rem;
+            background: #f1f5f9;
+        }
+        .public-hostels-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.78rem;
+            margin-top: 0.7rem;
+        }
+        .public-carousel-arrow {
+            position: static;
+            z-index: 6;
+            width: 2.85rem;
+            height: 2.85rem;
+            border-radius: 999px;
+            border: 1px solid #d0dee9;
+            background: #fff;
+            color: #2f4053;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+        .public-carousel-arrow i {
+            font-size: 1.18rem;
+            line-height: 1;
+        }
+        #publicHostelPrev {
+            left: auto;
+        }
+        #publicHostelNext {
+            right: auto;
+        }
+        .public-carousel-arrow:hover,
+        .public-carousel-arrow:focus {
+            border-color: var(--aqua-dark);
+            color: var(--aqua-dark);
+            transform: scale(1.03);
+        }
+        .public-carousel-arrow:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .public-hostels-dots {
+            display: flex;
+            align-items: center;
+            gap: 0.42rem;
+        }
+        .public-hostels-dot {
+            width: 0.52rem;
+            height: 0.52rem;
+            border-radius: 999px;
+            border: 0;
+            background: #c2d1dd;
+            padding: 0;
+            transition: width 0.2s ease, background 0.2s ease;
+        }
+        .public-hostels-dot.is-active {
+            width: 1.45rem;
+            background: var(--aqua-dark);
+        }
         /* Contact Section */
         .contact-section {
             background: #f3f9fb;
@@ -676,11 +1118,11 @@
         }
         .btn-contact-submit:hover,
         .btn-contact-submit:focus {
-            background: var(--aqua);
+            background: #000;
             color: #fff;
-            border-color: var(--aqua);
+            border-color: #000;
             transform: translateY(-1px);
-            box-shadow: 0 16px 28px rgba(17, 153, 142, 0.24);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, 0.28);
         }
         /* Footer */
         .site-footer {
@@ -835,6 +1277,36 @@
             .capability-card {
                 padding: 1.5rem 1.3rem;
             }
+            .public-filter-actions {
+                align-items: flex-start;
+            }
+            .public-hostel-card {
+                flex-basis: calc((100% - 1.05rem) / 2);
+                min-width: 250px;
+            }
+            .public-hostels-nav {
+                margin-top: 0.7rem;
+                gap: 0.7rem;
+            }
+            .public-carousel-arrow {
+                position: static;
+                top: auto;
+                left: auto;
+                right: auto;
+                transform: none;
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+            .public-carousel-arrow:hover,
+            .public-carousel-arrow:focus,
+            .public-carousel-arrow:disabled {
+                transform: none;
+            }
+            #publicHostelPrev,
+            #publicHostelNext {
+                left: auto;
+                right: auto;
+            }
             .contact-shell {
                 border-radius: 1.4rem;
             }
@@ -870,6 +1342,38 @@
                 width: 100%;
                 justify-content: center;
             }
+            .public-hostels-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .public-hostels-filter-card {
+                padding: 0.82rem;
+            }
+            .public-filter-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .public-filter-actions .btn {
+                width: 100%;
+            }
+            .public-hostel-image {
+                height: 172px;
+            }
+            .public-hostel-card {
+                flex-basis: 100%;
+                min-width: 88%;
+            }
+            .public-hostel-description {
+                min-height: auto;
+            }
+            .hostel-detail-stats {
+                grid-template-columns: 1fr;
+            }
+            .hostel-map-frame {
+                min-height: 300px;
+            }
+            .public-hostels-nav {
+                gap: 0.55rem;
+            }
             .contact-pane-title {
                 font-size: 1.45rem;
             }
@@ -889,6 +1393,14 @@
                 text-align: center;
             }
         }
+        @media (max-width: 420px) {
+            .public-hostels-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .public-hostel-card {
+                min-width: 100%;
+            }
+        }
         @media (prefers-reduced-motion: reduce) {
             .hero-stat-card {
                 animation: none;
@@ -901,6 +1413,11 @@
             .btn-hero-secondary i {
                 transition: none;
                 animation: none;
+            }
+            .public-hostel-card,
+            .public-mini-stat,
+            .public-hostel-image {
+                transition: none;
             }
         }
 

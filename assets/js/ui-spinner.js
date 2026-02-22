@@ -63,12 +63,49 @@
             if (!(form instanceof HTMLFormElement)) return;
 
             var confirmMessage = form.getAttribute("data-confirm");
-            if (confirmMessage) {
-                var accepted = window.confirm(confirmMessage);
-                if (!accepted) {
-                    event.preventDefault();
-                    return;
-                }
+            var skipConfirm = form.dataset.swalConfirmAccepted === "1";
+            if (confirmMessage && !skipConfirm) {
+                event.preventDefault();
+                var submitterForRetry = event.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+
+                window.setTimeout(function () {
+                    if (form.dataset.skipSwalConfirm === "1") {
+                        delete form.dataset.skipSwalConfirm;
+                        return;
+                    }
+
+                    var confirmAction = window.AdminAlerts && typeof window.AdminAlerts.confirmAction === "function"
+                        ? window.AdminAlerts.confirmAction
+                        : function (message) { return Promise.resolve(window.confirm(message)); };
+
+                    confirmAction(confirmMessage, { form: form })
+                        .then(function (accepted) {
+                            if (!accepted) return;
+
+                            form.dataset.swalConfirmAccepted = "1";
+                            if (typeof form.requestSubmit === "function") {
+                                if (submitterForRetry) {
+                                    form.requestSubmit(submitterForRetry);
+                                } else {
+                                    form.requestSubmit();
+                                }
+                                return;
+                            }
+
+                            if (submitterForRetry && !shouldSkipButton(submitterForRetry)) {
+                                setLoading(submitterForRetry);
+                            }
+                            form.submit();
+                        })
+                        .catch(function () {
+                            // Ignore confirmation errors and keep form untouched.
+                        });
+                }, 0);
+                return;
+            }
+
+            if (skipConfirm) {
+                delete form.dataset.swalConfirmAccepted;
             }
 
             if (event.defaultPrevented) return;

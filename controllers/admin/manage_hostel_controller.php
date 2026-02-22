@@ -2,12 +2,22 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
+require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
 
 $errors = [];
 $success = '';
 $openModal = '';
 $editFormData = null;
 $addFormData = null;
+
+$flash = admin_prg_consume('manage_hostel');
+if (is_array($flash)) {
+    $errors = is_array($flash['errors'] ?? null) ? $flash['errors'] : [];
+    $success = (string)($flash['success'] ?? '');
+    $openModal = (string)($flash['openModal'] ?? '');
+    $editFormData = is_array($flash['editFormData'] ?? null) ? $flash['editFormData'] : null;
+    $addFormData = is_array($flash['addFormData'] ?? null) ? $flash['addFormData'] : null;
+}
 
 $tableExists = static function (PDO $db, string $table): bool {
     static $cache = [];
@@ -44,6 +54,7 @@ $columnExists = static function (PDO $db, string $table, string $column): bool {
 
 $hasHostelGender = $columnExists($pdo, 'hostels', 'gender');
 $hasHostelStatus = $columnExists($pdo, 'hostels', 'status');
+$hasHostelDescription = $columnExists($pdo, 'hostels', 'description');
 
 $uploadHostelImage = static function (array $file, string $targetDir, ?string &$error = null): ?string {
     if (empty($file['name'])) {
@@ -111,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'add_hostel') {
         $name = trim($_POST['name'] ?? '');
-        $description = trim($_POST['description'] ?? '');
+        $description = trim((string)($_POST['description'] ?? ''));
         $location = trim($_POST['location'] ?? '');
         $gender = strtolower(trim((string)($_POST['gender'] ?? 'all')));
 
@@ -141,19 +152,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($errors)) {
-            if ($hasHostelGender && $hasHostelStatus) {
-                $stmt = $pdo->prepare('INSERT INTO hostels (name, description, location, gender, status, hostel_image) VALUES (?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$name, $description, $location, $gender, 'active', $hostelImage]);
-            } elseif ($hasHostelGender) {
-                $stmt = $pdo->prepare('INSERT INTO hostels (name, description, location, gender, hostel_image) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([$name, $description, $location, $gender, $hostelImage]);
-            } elseif ($hasHostelStatus) {
-                $stmt = $pdo->prepare('INSERT INTO hostels (name, description, location, status, hostel_image) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([$name, $description, $location, 'active', $hostelImage]);
-            } else {
-                $stmt = $pdo->prepare('INSERT INTO hostels (name, description, location, hostel_image) VALUES (?, ?, ?, ?)');
-                $stmt->execute([$name, $description, $location, $hostelImage]);
+            $insertData = [
+                'name' => $name,
+                'location' => $location,
+            ];
+            if ($hasHostelDescription) {
+                $insertData['description'] = $description;
             }
+            if ($hasHostelGender) {
+                $insertData['gender'] = $gender;
+            }
+            if ($hasHostelStatus) {
+                $insertData['status'] = 'active';
+            }
+            $insertData['hostel_image'] = $hostelImage;
+
+            $insertColumns = array_keys($insertData);
+            $insertPlaceholders = implode(', ', array_fill(0, count($insertColumns), '?'));
+            $stmt = $pdo->prepare(
+                'INSERT INTO hostels (' . implode(', ', $insertColumns) . ') VALUES (' . $insertPlaceholders . ')'
+            );
+            $stmt->execute(array_values($insertData));
             $success = 'Hostel added successfully.';
         } else {
             $openModal = 'addHostelModal';
@@ -169,8 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update_hostel') {
         $id = (int)($_POST['id'] ?? 0);
         $name = trim($_POST['name'] ?? '');
-        $hasDescriptionInput = array_key_exists('description', $_POST);
-        $description = $hasDescriptionInput ? trim((string)($_POST['description'] ?? '')) : null;
+        $description = trim((string)($_POST['description'] ?? ''));
         $location = trim($_POST['location'] ?? '');
         $gender = strtolower(trim((string)($_POST['gender'] ?? 'all')));
         $existingImage = trim($_POST['existing_image'] ?? '');
@@ -205,20 +223,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if (!$hasDescriptionInput) {
-            $descStmt = $pdo->prepare('SELECT description FROM hostels WHERE id = ?');
-            $descStmt->execute([$id]);
-            $description = (string)($descStmt->fetchColumn() ?? '');
-        }
-
         if (empty($errors)) {
-            if ($hasHostelGender) {
-                $stmt = $pdo->prepare('UPDATE hostels SET name = ?, description = ?, location = ?, gender = ?, hostel_image = ? WHERE id = ?');
-                $stmt->execute([$name, $description, $location, $gender, $hostelImage, $id]);
-            } else {
-                $stmt = $pdo->prepare('UPDATE hostels SET name = ?, description = ?, location = ?, hostel_image = ? WHERE id = ?');
-                $stmt->execute([$name, $description, $location, $hostelImage, $id]);
+            $updateData = [
+                'name' => $name,
+                'location' => $location,
+            ];
+            if ($hasHostelDescription) {
+                $updateData['description'] = $description;
             }
+            if ($hasHostelGender) {
+                $updateData['gender'] = $gender;
+            }
+            $updateData['hostel_image'] = $hostelImage;
+
+            $setClause = implode(', ', array_map(
+                static function (string $column): string {
+                    return $column . ' = ?';
+                },
+                array_keys($updateData)
+            ));
+
+            $params = array_values($updateData);
+            $params[] = $id;
+
+            $stmt = $pdo->prepare('UPDATE hostels SET ' . $setClause . ' WHERE id = ?');
+            $stmt->execute($params);
             $success = 'Hostel updated successfully.';
         } else {
             $openModal = 'editHostelModal';
@@ -274,12 +303,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = count($ids) . ' hostel(s) disabled successfully.';
         }
     }
+
+    admin_prg_redirect('manage_hostel', [
+        'errors' => $errors,
+        'success' => $success,
+        'openModal' => $openModal,
+        'editFormData' => $editFormData,
+        'addFormData' => $addFormData,
+    ]);
 }
 
 $hasRoomsTable = $tableExists($pdo, 'rooms');
 $hasBedsTable = $tableExists($pdo, 'beds');
 
-$hostelsSql = 'SELECT h.id, h.name, h.description, h.location, h.hostel_image, h.created_at';
+$hostelsSql = 'SELECT h.id, h.name, h.location, h.hostel_image, h.created_at';
+if ($hasHostelDescription) {
+    $hostelsSql .= ', h.description';
+} else {
+    $hostelsSql .= ", '' AS description";
+}
 if ($hasHostelGender) {
     $hostelsSql .= ', h.gender';
 } else {
@@ -292,7 +334,10 @@ if ($hasHostelStatus) {
 }
 
 if ($hasRoomsTable) {
-    $groupBy = 'h.id, h.name, h.description, h.location, h.hostel_image, h.created_at';
+    $groupBy = 'h.id, h.name, h.location, h.hostel_image, h.created_at';
+    if ($hasHostelDescription) {
+        $groupBy .= ', h.description';
+    }
     if ($hasHostelGender) {
         $groupBy .= ', h.gender';
     }

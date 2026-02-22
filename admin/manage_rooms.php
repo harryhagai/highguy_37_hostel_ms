@@ -14,6 +14,7 @@ $stats = $state['stats'];
 $roomTypeOptions = $state['roomTypeOptions'];
 $supportsRoomImages = !empty($state['supportsRoomImages']);
 $roomImages = $state['roomImages'];
+$initialHostelId = (int)($state['initialHostelId'] ?? 0);
 ?>
 <div class="container-fluid px-0 users-page rooms-page">
     <?php if (!empty($errors)): ?>
@@ -141,6 +142,7 @@ $roomImages = $state['roomImages'];
                         <th>Room</th>
                         <th>Hostel</th>
                         <th>Type</th>
+                        <th>Capacity</th>
                         <th>Price</th>
                         <th>Created</th>
                         <th>Actions</th>
@@ -154,10 +156,14 @@ $roomImages = $state['roomImages'];
                     $roomTypeKey = strtolower(trim((string)($room['room_type_key'] ?? '')));
                     $priceTier = (string)($room['price_tier'] ?? (((float)($room['price'] ?? 0) > 0) ? 'paid' : 'free'));
                     $description = trim((string)($room['description'] ?? ''));
-                    $descPreview = $description;
-                    if (strlen($descPreview) > 70) {
-                        $descPreview = substr($descPreview, 0, 70) . '...';
+                    $freeBedsRemaining = (int)($room['free_beds_remaining'] ?? (int)($room['bed_capacity'] ?? 4));
+                    if ($freeBedsRemaining < 0) {
+                        $freeBedsRemaining = 0;
                     }
+                    $freeBedsBadgeClass = $freeBedsRemaining > 0 ? 'user-status-active' : 'user-status-inactive';
+                    $freeBedsLabel = $freeBedsRemaining === 1
+                        ? '1 free bed remaining'
+                        : $freeBedsRemaining . ' free beds remaining';
                     $roomImagePath = trim((string)($room['room_image_path'] ?? ''));
                     $roomImageUrl = $roomImagePath !== '' ? '../' . ltrim($roomImagePath, '/') : '';
                     $searchText = strtolower(trim(
@@ -165,6 +171,7 @@ $roomImages = $state['roomImages'];
                         (string)($room['hostel_name'] ?? '') . ' ' .
                         (string)($room['room_number'] ?? '') . ' ' .
                         (string)($room['room_type'] ?? '') . ' ' .
+                        (string)($room['bed_capacity'] ?? '') . ' ' .
                         (string)($room['description'] ?? '') . ' ' .
                         (string)($room['price_display'] ?? '')
                     ));
@@ -192,9 +199,9 @@ $roomImages = $state['roomImages'];
                                 </div>
                                 <div>
                                     <div class="fw-semibold">Room <?= htmlspecialchars((string)($room['room_number'] ?? '-')) ?></div>
-                                    <small class="text-muted" title="<?= htmlspecialchars($description !== '' ? $description : 'No description') ?>">
-                                        <?= htmlspecialchars($description !== '' ? $descPreview : 'No description') ?>
-                                    </small>
+                                    <span class="badge user-status-badge <?= $freeBedsBadgeClass ?> mt-1">
+                                        <?= htmlspecialchars($freeBedsLabel) ?>
+                                    </span>
                                 </div>
                             </div>
                         </td>
@@ -205,12 +212,17 @@ $roomImages = $state['roomImages'];
                             </span>
                         </td>
                         <td>
+                            <span class="badge user-role-badge user-role-admin">
+                                <?= (int)($room['bed_capacity'] ?? 4) ?>
+                            </span>
+                        </td>
+                        <td>
                             <span class="badge user-status-badge <?= $priceTier === 'paid' ? 'user-status-active' : 'user-status-inactive' ?>">
                                 TZS <?= htmlspecialchars((string)($room['price_display'] ?? '0.00')) ?>
                             </span>
                         </td>
                         <td><?= htmlspecialchars((string)($room['created_at_display'] ?? '-')) ?></td>
-                        <td class="d-flex gap-1 flex-wrap">
+                        <td class="d-flex gap-1 flex-nowrap actions-cell">
                             <button
                                 type="button"
                                 class="btn btn-sm btn-outline-secondary view-room-btn"
@@ -244,7 +256,7 @@ $roomImages = $state['roomImages'];
                     </tr>
                 <?php endforeach; ?>
                     <tr id="roomsNoResultsRow" class="<?= empty($rooms) ? '' : 'd-none' ?>">
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             <?= empty($rooms) ? 'No rooms found.' : 'No rooms match your filters.' ?>
                         </td>
                     </tr>
@@ -261,12 +273,26 @@ $roomImages = $state['roomImages'];
 </div>
 
 <div class="modal fade users-modal" id="addRoomModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable mt-5">
         <div class="modal-content">
             <form method="post" enctype="multipart/form-data" autocomplete="off">
                 <input type="hidden" name="action" value="add_room">
-                <input type="hidden" name="room_image_id" id="addRoomImageId" value="<?= (int)($addFormData['room_image_id'] ?? 0) ?>">
-                <input type="hidden" name="room_image_label" id="addRoomImageLabel" value="<?= htmlspecialchars((string)($addFormData['room_image_label'] ?? '')) ?>">
+                <?php
+                $addRoomMode = strtolower(trim((string)($addFormData['add_mode'] ?? 'single')));
+                if (!in_array($addRoomMode, ['single', 'bulk'], true)) {
+                    $addRoomMode = 'single';
+                }
+                $addRoomBulkCount = (int)($addFormData['bulk_count'] ?? 2);
+                if ($addRoomBulkCount < 2) {
+                    $addRoomBulkCount = 2;
+                }
+                $addRoomBedCapacity = (int)($addFormData['bed_capacity'] ?? 4);
+                if ($addRoomBedCapacity < 1) {
+                    $addRoomBedCapacity = 1;
+                } elseif ($addRoomBedCapacity > 4) {
+                    $addRoomBedCapacity = 4;
+                }
+                ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-door-open"></i> Add Room</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -280,10 +306,14 @@ $roomImages = $state['roomImages'];
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Hostel</label>
-                                            <select name="hostel_id" class="form-select" required>
+                                            <select name="hostel_id" id="addRoomHostel" class="form-select" required>
                                                 <option value="">Select Hostel</option>
                                                 <?php foreach ($hostels as $hostel): ?>
-                                                    <option value="<?= (int)$hostel['id'] ?>" <?= ((int)($addFormData['hostel_id'] ?? 0) === (int)$hostel['id']) ? 'selected' : '' ?>>
+                                                    <option
+                                                        value="<?= (int)$hostel['id'] ?>"
+                                                        data-hostel-name="<?= htmlspecialchars((string)$hostel['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                        <?= ((int)($addFormData['hostel_id'] ?? 0) === (int)$hostel['id']) ? 'selected' : '' ?>
+                                                    >
                                                         <?= htmlspecialchars((string)$hostel['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -291,11 +321,44 @@ $roomImages = $state['roomImages'];
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Room Number</label>
-                                            <input type="text" name="room_number" class="form-control" required value="<?= htmlspecialchars((string)($addFormData['room_number'] ?? '')) ?>">
+                                            <input type="text" name="room_number" id="addRoomNumber" class="form-control" required value="<?= htmlspecialchars((string)($addFormData['room_number'] ?? '')) ?>">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Add Mode</label>
+                                            <select name="add_mode" id="addRoomMode" class="form-select">
+                                                <option value="single" <?= $addRoomMode === 'single' ? 'selected' : '' ?>>Single</option>
+                                                <option value="bulk" <?= $addRoomMode === 'bulk' ? 'selected' : '' ?>>Bulk</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 <?= $addRoomMode === 'bulk' ? '' : 'd-none' ?>" id="addRoomBulkCountWrap">
+                                            <label class="form-label">Number of Rooms</label>
+                                            <input
+                                                type="number"
+                                                min="2"
+                                                max="200"
+                                                name="bulk_count"
+                                                id="addRoomBulkCount"
+                                                class="form-control"
+                                                value="<?= $addRoomBulkCount ?>"
+                                                <?= $addRoomMode === 'bulk' ? 'required' : '' ?>
+                                            >
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Room Type</label>
                                             <input type="text" name="room_type" class="form-control" required value="<?= htmlspecialchars((string)($addFormData['room_type'] ?? '')) ?>">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Bed Capacity (Max 4)</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="4"
+                                                name="bed_capacity"
+                                                id="addRoomBedCapacity"
+                                                class="form-control"
+                                                required
+                                                value="<?= $addRoomBedCapacity ?>"
+                                            >
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Price (TZS)</label>
@@ -309,20 +372,54 @@ $roomImages = $state['roomImages'];
                                 </div>
                             </div>
                             <div class="col-lg-5">
-                                <div class="border rounded-3 p-3 h-100">
+                                <div class="border rounded-3 p-3 h-100 d-flex flex-column">
                                     <h6 class="mb-3 fw-semibold"><i class="bi bi-image me-1"></i> Room Image</h6>
-                                    <label class="form-label">Upload Image</label>
+                                    <?php if ($supportsRoomImages): ?>
+                                        <label class="form-label">Use Existing Image (Storage Saver)</label>
+                                        <select name="room_image_id" id="addRoomImageId" class="form-select mb-2">
+                                            <option value="0" data-image-path="">None</option>
+                                            <?php foreach ($roomImages as $image): ?>
+                                                <?php
+                                                $imageId = (int)($image['id'] ?? 0);
+                                                $imagePath = (string)($image['image_path'] ?? '');
+                                                $imageLabel = trim((string)($image['image_label'] ?? ''));
+                                                if ($imageLabel === '') {
+                                                    $imageLabel = 'Image #' . $imageId;
+                                                }
+                                                ?>
+                                                <option
+                                                    value="<?= $imageId ?>"
+                                                    data-image-path="<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>"
+                                                    <?= ((int)($addFormData['room_image_id'] ?? 0) === $imageId) ? 'selected' : '' ?>
+                                                >
+                                                    <?= htmlspecialchars($imageLabel) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <input type="hidden" name="room_image_id" id="addRoomImageId" value="0">
+                                    <?php endif; ?>
+                                    <label class="form-label">Upload New Image</label>
                                     <input type="file" name="room_image" id="addRoomImageUpload" class="form-control" accept="image/*">
-                                    <div class="form-text mt-2">All image formats are accepted.</div>
+                                    <label class="form-label mt-2">New Image Label (optional)</label>
+                                    <input
+                                        type="text"
+                                        name="room_image_label"
+                                        id="addRoomImageLabel"
+                                        class="form-control"
+                                        value="<?= htmlspecialchars((string)($addFormData['room_image_label'] ?? '')) ?>"
+                                        placeholder="Example: Wing A Shared Image"
+                                    >
+                                    <div class="form-text mt-2">Select existing image to reuse for many rooms or upload new one.</div>
                                     <img id="addRoomImagePreview" src="" alt="Selected image preview" class="mt-3 rounded room-preview-md" style="display: none;">
+                                    <div class="mt-4 d-flex flex-wrap gap-2">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check-circle me-1"></i> Save Room</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check-circle me-1"></i> Save Room</button>
                 </div>
             </form>
         </div>
@@ -330,13 +427,11 @@ $roomImages = $state['roomImages'];
 </div>
 
 <div class="modal fade users-modal" id="editRoomModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable mt-5">
         <div class="modal-content">
             <form method="post" enctype="multipart/form-data" autocomplete="off" id="editRoomForm">
                 <input type="hidden" name="action" value="update_room">
                 <input type="hidden" name="id" id="editRoomId">
-                <input type="hidden" name="room_image_id" id="editRoomImageId">
-                <input type="hidden" name="room_image_label" id="editRoomImageLabel">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Edit Room</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -353,7 +448,12 @@ $roomImages = $state['roomImages'];
                                             <select name="hostel_id" id="editRoomHostel" class="form-select" required>
                                                 <option value="">Select Hostel</option>
                                                 <?php foreach ($hostels as $hostel): ?>
-                                                    <option value="<?= (int)$hostel['id'] ?>"><?= htmlspecialchars((string)$hostel['name']) ?></option>
+                                                    <option
+                                                        value="<?= (int)$hostel['id'] ?>"
+                                                        data-hostel-name="<?= htmlspecialchars((string)$hostel['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                    >
+                                                        <?= htmlspecialchars((string)$hostel['name']) ?>
+                                                    </option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
@@ -364,6 +464,10 @@ $roomImages = $state['roomImages'];
                                         <div class="col-md-6">
                                             <label class="form-label">Room Type</label>
                                             <input type="text" name="room_type" id="editRoomType" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Bed Capacity (Max 4)</label>
+                                            <input type="number" min="1" max="4" name="bed_capacity" id="editRoomBedCapacity" class="form-control" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Price (TZS)</label>
@@ -378,9 +482,35 @@ $roomImages = $state['roomImages'];
                             </div>
                             <div class="col-lg-5">
                                 <div class="border rounded-3 p-3 h-100">
-                                    <h6 class="mb-3 fw-semibold"><i class="bi bi-image-alt me-1"></i> Replace Image</h6>
+                                    <h6 class="mb-3 fw-semibold"><i class="bi bi-image-alt me-1"></i> Room Image</h6>
+                                    <?php if ($supportsRoomImages): ?>
+                                        <label class="form-label">Use Existing Image (Storage Saver)</label>
+                                        <select name="room_image_id" id="editRoomImageId" class="form-select mb-2">
+                                            <option value="0" data-image-path="">None</option>
+                                            <?php foreach ($roomImages as $image): ?>
+                                                <?php
+                                                $imageId = (int)($image['id'] ?? 0);
+                                                $imagePath = (string)($image['image_path'] ?? '');
+                                                $imageLabel = trim((string)($image['image_label'] ?? ''));
+                                                if ($imageLabel === '') {
+                                                    $imageLabel = 'Image #' . $imageId;
+                                                }
+                                                ?>
+                                                <option
+                                                    value="<?= $imageId ?>"
+                                                    data-image-path="<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>"
+                                                >
+                                                    <?= htmlspecialchars($imageLabel) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <input type="hidden" name="room_image_id" id="editRoomImageId" value="0">
+                                    <?php endif; ?>
                                     <label class="form-label">New Image (Optional)</label>
                                     <input type="file" name="room_image" id="editRoomImageUpload" class="form-control" accept="image/*">
+                                    <label class="form-label mt-2">New Image Label (optional)</label>
+                                    <input type="text" name="room_image_label" id="editRoomImageLabel" class="form-control" placeholder="Example: Wing A Shared Image">
                                     <div class="form-text mt-2">Leave empty to keep the current image.</div>
                                     <img id="editRoomImagePreview" src="" alt="Current image" class="mt-3 rounded room-preview-md" style="display: none;">
                                 </div>
@@ -410,6 +540,7 @@ $roomImages = $state['roomImages'];
                         <p class="mb-2"><strong>Hostel:</strong> <span id="viewRoomHostel">-</span></p>
                         <p class="mb-2"><strong>Room Number:</strong> <span id="viewRoomNumber">-</span></p>
                         <p class="mb-2"><strong>Room Type:</strong> <span id="viewRoomType">-</span></p>
+                        <p class="mb-2"><strong>Bed Capacity:</strong> <span id="viewRoomBedCapacity">-</span></p>
                         <p class="mb-2"><strong>Price:</strong> <span id="viewRoomPrice">-</span></p>
                         <p class="mb-2"><strong>Description:</strong> <span id="viewRoomDescriptionText">-</span></p>
                         <p class="mb-2"><strong>Created:</strong> <span id="viewRoomCreated">-</span></p>
@@ -428,6 +559,7 @@ $roomImages = $state['roomImages'];
     id="manageRoomsConfig"
     data-open-modal="<?= htmlspecialchars($openModal, ENT_QUOTES, 'UTF-8') ?>"
     data-edit-form="<?= htmlspecialchars(json_encode($editFormData), ENT_QUOTES, 'UTF-8') ?>"
+    data-initial-hostel-id="<?= $initialHostelId ?>"
     data-total-rooms="<?= (int)count($rooms) ?>">
 </div>
 <script src="../assets/js/admin-manage-rooms.js"></script>

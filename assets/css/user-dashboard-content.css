@@ -1,0 +1,350 @@
+.user-hero-card {
+    border: 1px solid #dbeafe;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.user-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.student-hostel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.student-hostel-grid.compact-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.student-hostel-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.04);
+    min-height: 100%;
+}
+
+.student-hostel-media {
+    position: relative;
+}
+
+.student-hostel-thumb {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.student-hostel-body {
+    padding: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    height: 100%;
+}
+
+.student-hostel-stats {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+}
+
+.no-rooms-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.student-booking-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.9rem;
+}
+
+.student-booking-grid.wide-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.student-booking-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.04);
+}
+
+.student-booking-card.status-pending {
+    border-left-color: #f59e0b;
+}
+
+.student-booking-card.status-confirmed {
+    border-left-color: #10b981;
+}
+
+.student-booking-card.status-cancelled {
+    border-left-color: #ef4444;
+}
+
+.student-booking-card.status-completed {
+    border-left-color: #6366f1;
+}
+
+.student-room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.95rem;
+}
+
+.student-room-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.04);
+}
+
+.student-room-media {
+    position: relative;
+}
+
+.student-room-thumb {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+    background: #f1f5f9;
+}
+
+.student-room-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+}
+
+.room-price {
+    font-size: 1.03rem;
+    font-weight: 700;
+    color: #0369a1;
+}
+
+.user-profile-shell {
+    border: 1px solid #dbeafe;
+}
+
+.user-profile-left {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.user-profile-avatar {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e0f2fe;
+    margin-bottom: 0.8rem;
+}
+
+.hostels-grid-page .users-filters,
+.user-bookings-page .dashboard-card,
+.user-book-room-page .dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.hostels-grid-page .users-filters {
+    background: #f8fbff;
+    padding: 0.75rem;
+}
+
+.hostels-grid-page .users-field-icon {
+    position: relative;
+}
+
+.hostels-grid-page .users-field-icon > i {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #0284c7;
+    font-size: 0.9rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.hostels-grid-page .users-field-icon .form-control,
+.hostels-grid-page .users-field-icon .form-select {
+    min-height: 38px;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 11px;
+    padding-left: 33px;
+    background: #ffffff;
+}
+
+.hostels-grid-page .users-field-icon .form-control:focus,
+.hostels-grid-page .users-field-icon .form-select:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.18);
+}
+
+.hostels-grid-page .users-field-search .form-control {
+    padding-right: 34px;
+}
+
+.hostels-grid-page .users-field-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    line-height: 1;
+    padding: 0;
+    z-index: 2;
+}
+
+.hostels-grid-page .users-field-clear:hover {
+    color: #0f766e;
+}
+
+.hostels-grid-page .users-result-count {
+    font-weight: 600;
+}
+
+#userHostelsNoResults {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.users-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.7rem;
+}
+
+.users-mini-stat {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.8rem;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.04);
+}
+
+.users-mini-label {
+    color: #64748b;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.modal-hostel-image {
+    min-height: 260px;
+    object-fit: cover;
+}
+
+.my-room-empty-state {
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+}
+
+.my-room-empty-icon {
+    font-size: 2.2rem;
+    color: #64748b;
+}
+
+.my-room-meta-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem;
+    background: #f8fbff;
+}
+
+.my-room-table thead th {
+    white-space: nowrap;
+}
+
+.my-room-table-wrap {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.my-room-self-row {
+    background: #f0f9ff;
+}
+
+.my-room-self-sticky td {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: #e0f2fe;
+    box-shadow: inset 0 -1px 0 #cbd5e1;
+}
+
+.student-bed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.95rem;
+}
+
+.student-bed-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+.student-bed-media {
+    position: relative;
+}
+
+.student-bed-body {
+    padding: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.user-book-bed-page .dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+@media (max-width: 991.98px) {
+    .user-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .user-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .student-hostel-grid,
+    .student-bed-grid,
+    .student-room-grid,
+    .student-booking-grid {
+        grid-template-columns: 1fr;
+    }
+}

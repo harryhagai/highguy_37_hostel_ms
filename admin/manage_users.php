@@ -130,6 +130,7 @@ $supports = $state['supports'];
                         </th>
                         <th>User</th>
                         <th>Email</th>
+                        <th>Gender</th>
                         <th>Role</th>
                         <th>Status</th>
                         <th>Joined</th>
@@ -146,6 +147,7 @@ $supports = $state['supports'];
                         (string)($user['username'] ?? '') . ' ' .
                         (string)($user['email'] ?? '') . ' ' .
                         (string)($user['phone'] ?? '') . ' ' .
+                        (string)($user['gender_label'] ?? '') . ' ' .
                         (string)($user['role'] ?? '') . ' ' .
                         (string)($user['status'] ?? '')
                     ));
@@ -185,6 +187,9 @@ $supports = $state['supports'];
                             </div>
                         </td>
                         <td><?= htmlspecialchars((string)($user['email'] ?? '')) ?></td>
+                        <td>
+                            <span class="badge text-bg-light"><?= htmlspecialchars((string)($user['gender_label'] ?? '-')) ?></span>
+                        </td>
                         <td>
                             <span class="badge user-role-badge <?= $roleValue === 'admin' ? 'user-role-admin' : 'user-role-user' ?>">
                                 <?= ucfirst($roleValue) ?>
@@ -237,7 +242,7 @@ $supports = $state['supports'];
                     </tr>
                 <?php endforeach; ?>
                     <tr id="usersNoResultsRow" class="<?= empty($users) ? '' : 'd-none' ?>">
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             <?= empty($users) ? 'No users found.' : 'No users match your filters.' ?>
                         </td>
                     </tr>
@@ -276,14 +281,22 @@ $supports = $state['supports'];
                             <label class="form-label">Phone</label>
                             <input type="text" name="phone" class="form-control form-control-sm">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" class="form-select form-select-sm" <?= !empty($supports['gender']) ? '' : 'disabled' ?> required>
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">Role</label>
                             <select name="role" class="form-select form-select-sm">
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Status</label>
                             <select name="status" class="form-select form-select-sm" <?= !empty($supports['status']) ? '' : 'disabled' ?>>
                                 <option value="active">Active</option>
@@ -330,14 +343,22 @@ $supports = $state['supports'];
                             <label class="form-label">Phone</label>
                             <input type="text" name="phone" id="editUserPhone" class="form-control form-control-sm">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" id="editUserGender" class="form-select form-select-sm" <?= !empty($supports['gender']) ? '' : 'disabled' ?> required>
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">Role</label>
                             <select name="role" id="editUserRole" class="form-select form-select-sm">
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Status</label>
                             <select name="status" id="editUserStatus" class="form-select form-select-sm" <?= !empty($supports['status']) ? '' : 'disabled' ?>>
                                 <option value="active">Active</option>
@@ -376,6 +397,7 @@ $supports = $state['supports'];
                     </div>
                     <div class="col-md-6">
                         <p class="mb-2"><strong>Role:</strong> <span id="viewUserRole">-</span></p>
+                        <p class="mb-2"><strong>Gender:</strong> <span id="viewUserGender">-</span></p>
                         <p class="mb-2"><strong>Status:</strong> <span id="viewUserStatus">-</span></p>
                         <p class="mb-2"><strong>Last Login:</strong> <span id="viewUserLastLogin">-</span></p>
                         <p class="mb-2"><strong>Joined:</strong> <span id="viewUserCreated">-</span></p>

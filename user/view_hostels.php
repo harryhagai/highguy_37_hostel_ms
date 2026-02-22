@@ -1,182 +1,191 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-require_once __DIR__ . '/../config/db_connection.php';
 require_once __DIR__ . '/../permission/role_permission.php';
 rp_require_roles(['user'], '../auth/login.php');
 
-// Fetch hostels and their room stats
-$stmt = $pdo->query("
-    SELECT h.*, 
-        (SELECT COUNT(*) FROM rooms WHERE hostel_id = h.id) AS total_rooms,
-        (SELECT COUNT(*) FROM rooms WHERE hostel_id = h.id AND available > 0) AS free_rooms
-    FROM hostels h
-    ORDER BY h.created_at DESC
-");
-$hostels = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$state = require __DIR__ . '/../controllers/user/view_hostels_controller.php';
+$hostels = $state['hostels'];
+$stats = $state['stats'];
+$locationOptions = $state['location_options'];
+$genderOptions = $state['gender_options'];
 ?>
-<!DOCTYPE html>
-<html lang="en">
+<div class="container-fluid px-0 hostels-grid-page">
+    <div class="users-quick-stats mb-3">
+        <article class="users-mini-stat">
+            <p class="users-mini-label mb-1">Total Hostels</p>
+            <h5 class="mb-0"><?= (int)$stats['total_hostels'] ?></h5>
+        </article>
+        <article class="users-mini-stat">
+            <p class="users-mini-label mb-1">Total Rooms</p>
+            <h5 class="mb-0"><?= (int)$stats['total_rooms'] ?></h5>
+        </article>
+        <article class="users-mini-stat">
+            <p class="users-mini-label mb-1">Free Rooms</p>
+            <h5 class="mb-0"><?= (int)$stats['free_rooms'] ?></h5>
+        </article>
+        <article class="users-mini-stat">
+            <p class="users-mini-label mb-1">Locations</p>
+            <h5 class="mb-0"><?= (int)$stats['locations'] ?></h5>
+        </article>
+    </div>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Book a Room</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
-    
-    <link rel="stylesheet" href="../assets/css/user-view-hostels.css">
-</head>
+    <div class="dashboard-card mb-3">
+        <div class="users-toolbar mb-3">
+            <div>
+                <h4 class="mb-1">Hostels</h4>
+                <p class="text-muted mb-0">Browse all available hostels using card grid view.</p>
+            </div>
+        </div>
 
-<body>
-    <div class="container py-4">
-        <h2 class="mb-4 view-hostels-title">
-            <i class="bi bi-building"></i> Book a Room
-        </h2>
-        <div class="row g-4">
-            <?php foreach ($hostels as $hostel): ?>
-                <?php
-                $genderValue = strtolower(trim((string)($hostel['gender'] ?? 'all')));
-                if (!in_array($genderValue, ['male', 'female', 'all'], true)) {
-                    $genderValue = 'all';
-                }
-                $genderLabel = $genderValue === 'male'
-                    ? 'Male Only'
-                    : ($genderValue === 'female' ? 'Female Only' : 'All Genders');
-                ?>
-                <div class="col-lg-6 col-md-6 col-12 d-flex">
-                    <div class="hostel-card w-100 position-relative">
-                        <div class="hostel-image-wrapper">
-                            <img src="../<?= htmlspecialchars($hostel['hostel_image']) ?>" alt="Hostel Image" class="hostel-image">
-                            <?php if ($hostel['free_rooms'] == 0): ?>
-                                <span class="badge bg-danger no-rooms-badge">No Free Rooms</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="hostel-card-body">
-                            <div class="hostel-title">
-                                <i class="bi bi-house-door-fill"></i>
-                                <?= htmlspecialchars($hostel['name']) ?>
-                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-2">
-                                    <?= htmlspecialchars($genderLabel) ?>
-                                </span>
-                            </div>
-                            <div class="hostel-location">
-                                <i class="bi bi-geo-alt-fill"></i>
-                                <!-- Location as trigger for map modal -->
-                                <a href="#" class="location-link" data-location="<?= htmlspecialchars($hostel['location']) ?>">
-                                    <?= htmlspecialchars($hostel['location']) ?>
-                                </a>
-                            </div>
-                            <div class="hostel-desc">
-                                <?= htmlspecialchars(mb_strimwidth($hostel['description'], 0, 100, '...')) ?>
-                            </div>
-                            <div class="hostel-stats">
-                                <span>
-                                    <i class="bi bi-door-closed stat-icon"></i>
-                                    <span class="stat-label">Total Rooms: </span>
-                                    <span class="stat-value"><?= $hostel['total_rooms'] ?></span>
-                                </span>
-                                <span>
-                                    <i class="bi bi-check-circle stat-icon"></i>
-                                    <span class="stat-label">Free: </span>
-                                    <span class="stat-value"><?= $hostel['free_rooms'] ?></span>
-                                </span>
-                            </div>
-                            <div class="hostel-actions">
-                                <!-- View Details Button (triggers modal) -->
-                                <button
-                                    class="btn btn-view"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#hostelModal"
-                                    data-hostel='<?= htmlspecialchars(json_encode([
-                                                        "name" => $hostel["name"],
-                                                        "location" => $hostel["location"],
-                                                        "description" => $hostel["description"],
-                                                        "image" => "../" . $hostel["hostel_image"],
-                                                        "total_rooms" => $hostel["total_rooms"],
-                                                        "free_rooms" => $hostel["free_rooms"],
-                                                        "gender" => $genderValue,
-                                                        "gender_label" => $genderLabel
-                                                    ])) ?>'>
-                                    <i class="bi bi-eye"></i> View Details
-                                </button>
-                                <!-- Book Room Button -->
-                                <?php if ($hostel['free_rooms'] > 0): ?>
-                                    <a href="user_dashboard_layout.php?page=book_room&hostel_id=<?= intval($hostel['id']) ?>" class="btn btn-primary">View Rooms & Book</a>
-                                    
-                                <?php else: ?>
-                                    <button class="btn btn-secondary" disabled>
-                                        <i class="bi bi-x-circle"></i> No Free Rooms
-                                    </button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
+        <div class="users-filters mb-2">
+            <div class="row g-2 align-items-center">
+                <div class="col-xl-4 col-lg-6 col-sm-6">
+                    <div class="users-field-icon users-field-search">
+                        <i class="bi bi-search"></i>
+                        <input type="search" class="form-control form-control-sm" id="userHostelsSearchInput" placeholder="Search hostel or location">
+                        <button type="button" id="clearUserHostelsSearch" class="users-field-clear" aria-label="Clear search">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
                     </div>
                 </div>
-            <?php endforeach; ?>
-            <?php if (empty($hostels)): ?>
-                <div class="col-12">
-                    <div class="alert alert-info">No hostels available at the moment.</div>
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="users-field-icon">
+                        <i class="bi bi-geo-alt"></i>
+                        <select id="userHostelsLocationFilter" class="form-select form-select-sm">
+                            <option value="">All Locations</option>
+                            <?php foreach ($locationOptions as $location): ?>
+                                <option value="<?= htmlspecialchars(strtolower((string)$location), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars((string)$location) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
-            <?php endif; ?>
+                <div class="col-xl-3 col-lg-6 col-sm-6">
+                    <div class="users-field-icon">
+                        <i class="bi bi-people"></i>
+                        <select id="userHostelsGenderFilter" class="form-select form-select-sm">
+                            <option value="">All Gender</option>
+                            <?php foreach ($genderOptions as $value => $label): ?>
+                                <option value="<?= htmlspecialchars((string)$value) ?>"><?= htmlspecialchars((string)$label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-6 col-sm-6">
+                    <div class="users-field-icon">
+                        <i class="bi bi-door-open"></i>
+                        <select id="userHostelsAvailabilityFilter" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            <option value="free">Has Free Rooms</option>
+                            <option value="full">Full</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                <span class="users-result-count text-muted small" id="userHostelsResultCount"><?= count($hostels) ?> results</span>
+                <a href="user_dashboard_layout.php?page=dashboard" data-spa-page="dashboard" data-no-spinner="true" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-house-door me-1"></i>Back to Dashboard
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Hostel Details Modal -->
-    <div class="modal fade" id="hostelModal" tabindex="-1" aria-labelledby="hostelModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body p-0">
-                    <div class="row g-0">
-                        <div class="col-md-6">
-                            <img id="modalHostelImage" src="" alt="Hostel Image" class="img-fluid w-100 h-100 modal-hostel-image">
-                        </div>
-                        <div class="col-md-6 p-4 d-flex flex-column">
-                            <h4 id="modalHostelName" class="mb-2 modal-hostel-name"></h4>
-                            <!-- Location as link to open map modal -->
-                            <div id="modalHostelLocation" class="mb-2 text-muted modal-hostel-location"></div>
-                            <div class="mb-2"><b>Gender:</b> <span id="modalHostelGender"></span></div>
-                            <div id="modalHostelDesc" class="mb-3 modal-hostel-desc"></div>
-                            <!-- Google Map Embed (small preview) -->
-                            <div id="modalHostelMap" class="modal-hostel-map"></div>
-                            <div class="mb-3">
-                                <span class="me-3"><i class="bi bi-door-closed"></i> <b>Total Rooms:</b> <span id="modalTotalRooms"></span></span>
-                                <span><i class="bi bi-check-circle"></i> <b>Free:</b> <span id="modalFreeRooms"></span></span>
-                            </div>
-                            <button class="btn btn-secondary ms-auto mt-auto" data-bs-dismiss="modal">Close</button>
+    <div id="studentHostelsGrid" class="student-hostel-grid">
+        <?php foreach ($hostels as $hostel): ?>
+            <?php
+            $hostelData = [
+                'id' => (int)$hostel['id'],
+                'name' => (string)$hostel['name'],
+                'location' => (string)$hostel['location'],
+                'description' => (string)$hostel['description'],
+                'image' => (string)$hostel['hostel_image_url'],
+                'gender_label' => (string)$hostel['gender_label'],
+                'total_rooms' => (int)$hostel['total_rooms'],
+                'free_rooms' => (int)$hostel['free_rooms'],
+                'bed_capacity' => (int)$hostel['bed_capacity'],
+            ];
+            ?>
+            <article
+                class="student-hostel-card"
+                data-search="<?= htmlspecialchars(strtolower((string)$hostel['name'] . ' ' . (string)$hostel['location'])) ?>"
+                data-location="<?= htmlspecialchars(strtolower((string)$hostel['location'])) ?>"
+                data-gender="<?= htmlspecialchars((string)$hostel['gender']) ?>"
+                data-availability="<?= (int)$hostel['free_rooms'] > 0 ? 'free' : 'full' ?>"
+            >
+                <div class="student-hostel-media">
+                    <img src="<?= htmlspecialchars((string)$hostel['hostel_image_url']) ?>" alt="Hostel Image" class="student-hostel-thumb">
+                    <?php if ((int)$hostel['free_rooms'] <= 0): ?>
+                        <span class="badge bg-danger no-rooms-badge">No Free Rooms</span>
+                    <?php endif; ?>
+                </div>
+                <div class="student-hostel-body">
+                    <div class="d-flex justify-content-between gap-2 align-items-start mb-2">
+                        <h5 class="mb-0"><?= htmlspecialchars((string)$hostel['name']) ?></h5>
+                        <span class="badge text-bg-light"><?= htmlspecialchars((string)$hostel['gender_label']) ?></span>
+                    </div>
+                    <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars((string)$hostel['location']) ?></p>
+                    <p class="mb-3"><?= htmlspecialchars((string)$hostel['description_preview']) ?></p>
+
+                    <div class="student-hostel-stats mb-3">
+                        <span><i class="bi bi-door-open"></i> Rooms: <b><?= (int)$hostel['total_rooms'] ?></b></span>
+                        <span><i class="bi bi-check-circle"></i> Free: <b><?= (int)$hostel['free_rooms'] ?></b></span>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap mt-auto">
+                        <button
+                            class="btn btn-outline-secondary btn-sm view-hostel-btn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#studentHostelModal"
+                            data-hostel='<?= htmlspecialchars(json_encode($hostelData), ENT_QUOTES, 'UTF-8') ?>'>
+                            <i class="bi bi-eye me-1"></i>View
+                        </button>
+                        <?php if ((int)$hostel['free_rooms'] > 0): ?>
+                            <a href="user_dashboard_layout.php?page=book_bed&hostel_id=<?= (int)$hostel['id'] ?>" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-calendar-plus me-1"></i>Book Bed
+                            </a>
+                        <?php else: ?>
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                <i class="bi bi-x-circle me-1"></i>Full
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </article>
+        <?php endforeach; ?>
+
+        <div id="userHostelsNoResults" class="alert alert-light border <?= empty($hostels) ? '' : 'd-none' ?>">
+            <?= empty($hostels) ? 'No hostels available right now.' : 'No hostels match your filters.' ?>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="studentHostelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-buildings me-2"></i>Hostel Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <img id="studentModalHostelImage" src="" alt="Hostel" class="img-fluid rounded w-100 modal-hostel-image">
+                    </div>
+                    <div class="col-md-7">
+                        <h4 id="studentModalHostelName" class="mb-1"></h4>
+                        <p id="studentModalHostelLocation" class="text-muted mb-2"></p>
+                        <span id="studentModalHostelGender" class="badge text-bg-light mb-2"></span>
+                        <p id="studentModalHostelDesc" class="mb-3"></p>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <span class="badge text-bg-secondary">Rooms: <span id="studentModalTotalRooms">0</span></span>
+                            <span class="badge text-bg-success">Free: <span id="studentModalFreeRooms">0</span></span>
+                            <span class="badge text-bg-primary">Beds: <span id="studentModalBedCapacity">0</span></span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Map Modal -->
-    <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="mapModalLabel"><i class="bi bi-geo-alt-fill"></i> Hostel Location</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-0 map-modal-body">
-                    <iframe id="mapFrame" width="100%" height="100%" class="map-frame" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script src="../assets/js/user-view-hostels.js"></script>
-</body>
-
-</html>
-
-
-
+<script src="../assets/js/user-view-hostels.js"></script>

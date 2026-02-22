@@ -1,9 +1,13 @@
 <?php
 $authState = require __DIR__ . '/../controllers/auth/register_controller.php';
 $errors = $authState['errors'];
+$generalErrors = $authState['general_errors'] ?? [];
+$fieldErrors = $authState['field_errors'] ?? [];
 $username = $authState['username'];
 $email = $authState['email'];
 $phone = $authState['phone'];
+$gender = $authState['gender'] ?? '';
+$supportsGender = !empty($authState['supports_gender']);
 $csrfToken = $authState['csrf_token'];
 ?>
 <!DOCTYPE html>
@@ -36,10 +40,11 @@ $csrfToken = $authState['csrf_token'];
                         <div class="auth-guide">
                             <h6 class="auth-guide-title">How to fill this form</h6>
                             <ul class="auth-guide-list mb-0">
-                                <li>Username: letters only, spaces between words allowed.</li>
+                                <li>Full name: at least 3 names, letters only.</li>
                                 <li>Email: must end with <code>@gmail.com</code>.</li>
-                                <li>Phone: use <code>+2557XXXXXXXX</code> or <code>07XXXXXXXX</code>.</li>
-                                <li>Password: minimum 6 characters.</li>
+                                <li>Phone: use <code>06...</code>, <code>07...</code>, or <code>+255 ..</code>.</li>
+                                <li>Gender: choose Male or Female.</li>
+                                <li>Password: minimum 6 chars with letters and numbers.</li>
                             </ul>
                         </div>
                     </div>
@@ -52,10 +57,10 @@ $csrfToken = $authState['csrf_token'];
                             <p class="mb-0">Fill the details below to create your account.</p>
                         </div>
 
-                        <?php if (!empty($errors)): ?>
+                        <?php if (!empty($generalErrors)): ?>
                             <div class="alert alert-danger" role="alert">
                                 <ul class="mb-0 ps-3">
-                                    <?php foreach ($errors as $err): ?>
+                                    <?php foreach ($generalErrors as $err): ?>
                                         <li><?= htmlspecialchars($err) ?></li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -66,30 +71,35 @@ $csrfToken = $authState['csrf_token'];
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
                             <div class="mb-3">
-                                <label class="form-label" for="username">Username</label>
-                                <div class="input-group input-group-auth">
+                                <label class="form-label" for="username">Full Name</label>
+                                <div class="input-group input-group-auth has-validation">
                                     <span class="input-group-text"><i class="bi bi-person"></i></span>
                                     <input
                                         type="text"
-                                        class="form-control"
+                                        class="form-control<?= !empty($fieldErrors['username']) ? ' is-invalid' : '' ?>"
                                         id="username"
                                         name="username"
-                                        placeholder="Letters and spaces"
+                                        placeholder="HAGAI HAROLD NGOBEY"
                                         value="<?= htmlspecialchars($username) ?>"
                                         required
-                                        pattern="[A-Za-z]+( [A-Za-z]+)*"
-                                        title="Letters only, spaces between words allowed"
+                                        pattern="^[A-Za-z]+(?: [A-Za-z]+){2,}$"
+                                        title="At least 3 names, letters only, separated by spaces"
+                                        data-field="username"
                                     >
+                                    <span class="input-group-text field-valid-indicator d-none" id="usernameCheck" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                    <div class="invalid-feedback<?= !empty($fieldErrors['username']) ? ' d-block' : '' ?>" id="usernameFeedback">
+                                        <?= htmlspecialchars((string)($fieldErrors['username'] ?? 'Enter at least 3 names using letters only, separated by spaces.')) ?>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label" for="email">Email</label>
-                                <div class="input-group input-group-auth">
+                                <div class="input-group input-group-auth has-validation">
                                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                                     <input
                                         type="email"
-                                        class="form-control"
+                                        class="form-control<?= !empty($fieldErrors['email']) ? ' is-invalid' : '' ?>"
                                         id="email"
                                         name="email"
                                         placeholder="name@gmail.com"
@@ -97,42 +107,78 @@ $csrfToken = $authState['csrf_token'];
                                         required
                                         pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
                                         title="Must be a valid @gmail.com email"
+                                        data-field="email"
                                     >
+                                    <span class="input-group-text field-valid-indicator d-none" id="emailCheck" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                    <div class="invalid-feedback<?= !empty($fieldErrors['email']) ? ' d-block' : '' ?>" id="emailFeedback">
+                                        <?= htmlspecialchars((string)($fieldErrors['email'] ?? 'Email must be a valid @gmail.com address.')) ?>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label" for="phone">Phone</label>
-                                <div class="input-group input-group-auth">
+                                <div class="input-group input-group-auth has-validation">
                                     <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                     <input
                                         type="text"
-                                        class="form-control"
+                                        class="form-control<?= !empty($fieldErrors['phone']) ? ' is-invalid' : '' ?>"
                                         id="phone"
                                         name="phone"
-                                        placeholder="+2557XXXXXXXX or 07XXXXXXXX"
+                                        placeholder="0765384905 or +255765384905"
                                         value="<?= htmlspecialchars($phone) ?>"
                                         required
-                                        pattern="^(\+2557\d{8}|07\d{8})$"
-                                        title="Format: +2557XXXXXXXX or 07XXXXXXXX"
+                                        pattern="^(0(?:6|7)\d{8}|\+255\s?(?:6|7)\d{8})$"
+                                        title="Use 10 digits starting with 06/07, or +255 followed by 9 digits"
+                                        data-field="phone"
                                     >
+                                    <span class="input-group-text field-valid-indicator d-none" id="phoneCheck" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                    <div class="invalid-feedback<?= !empty($fieldErrors['phone']) ? ' d-block' : '' ?>" id="phoneFeedback">
+                                        <?= htmlspecialchars((string)($fieldErrors['phone'] ?? 'Use 10 digits starting 06/07, or +255 followed by 9 digits.')) ?>
+                                    </div>
                                 </div>
                             </div>
 
+                            <?php if ($supportsGender): ?>
+                                <div class="mb-3">
+                                    <label class="form-label" for="gender">Gender</label>
+                                    <div class="input-group input-group-auth has-validation">
+                                        <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span>
+                                        <select class="form-select<?= !empty($fieldErrors['gender']) ? ' is-invalid' : '' ?>" id="gender" name="gender" required data-field="gender">
+                                            <option value="">Select gender</option>
+                                            <option value="male" <?= $gender === 'male' ? 'selected' : '' ?>>Male</option>
+                                            <option value="female" <?= $gender === 'female' ? 'selected' : '' ?>>Female</option>
+                                        </select>
+                                        <span class="input-group-text field-valid-indicator d-none" id="genderCheck" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                        <div class="invalid-feedback<?= !empty($fieldErrors['gender']) ? ' d-block' : '' ?>" id="genderFeedback">
+                                            <?= htmlspecialchars((string)($fieldErrors['gender'] ?? 'Please select gender.')) ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <div class="mb-4">
                                 <label class="form-label" for="password">Password</label>
-                                <div class="input-group input-group-auth">
+                                <div class="input-group input-group-auth has-validation">
                                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                                     <input
                                         type="password"
-                                        class="form-control"
+                                        class="form-control<?= !empty($fieldErrors['password']) ? ' is-invalid' : '' ?>"
                                         id="password"
                                         name="password"
-                                        placeholder="At least 6 characters"
+                                        placeholder="Letters + numbers, min 6"
                                         required
                                         minlength="6"
                                         autocomplete="new-password"
+                                        data-field="password"
                                     >
+                                    <button type="button" class="btn btn-password-toggle" id="togglePassword" aria-label="Show password">
+                                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                    </button>
+                                    <span class="input-group-text field-valid-indicator d-none" id="passwordCheck" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                                    <div class="invalid-feedback<?= !empty($fieldErrors['password']) ? ' d-block' : '' ?>" id="passwordFeedback">
+                                        <?= htmlspecialchars((string)($fieldErrors['password'] ?? 'Password must be at least 6 characters and include letters and numbers.')) ?>
+                                    </div>
                                 </div>
                             </div>
 
@@ -158,5 +204,6 @@ $csrfToken = $authState['csrf_token'];
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/ui-spinner.js"></script>
+    <script src="../assets/js/register.js"></script>
 </body>
 </html>

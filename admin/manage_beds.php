@@ -13,6 +13,8 @@ $beds = $state['beds'];
 $stats = $state['stats'];
 $hostelOptions = $state['hostelOptions'];
 $roomOptions = $state['roomOptions'];
+$initialHostelId = (int)($state['initialHostelId'] ?? 0);
+$initialRoomId = (int)($state['initialRoomId'] ?? 0);
 ?>
 <div class="container-fluid px-0 users-page beds-page">
     <?php if (!empty($errors)): ?>
@@ -90,7 +92,7 @@ $roomOptions = $state['roomOptions'];
                         <select class="form-select form-select-sm" id="bedsRoomFilter">
                             <option value="">All Rooms</option>
                             <?php foreach ($roomOptions as $room): ?>
-                                <option value="<?= (int)$room['id'] ?>">
+                                <option value="<?= (int)$room['id'] ?>" data-hostel-id="<?= (int)($room['hostel_id'] ?? 0) ?>">
                                     <?= htmlspecialchars((string)$room['hostel_name'] . ' - Room ' . (string)$room['room_number']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -201,7 +203,7 @@ $roomOptions = $state['roomOptions'];
                             </span>
                         </td>
                         <td><?= htmlspecialchars((string)($bed['created_at_display'] ?? '-')) ?></td>
-                        <td class="d-flex gap-1 flex-wrap">
+                        <td class="d-flex gap-1 flex-nowrap actions-cell">
                             <button
                                 type="button"
                                 class="btn btn-sm btn-outline-secondary view-bed-btn"
@@ -262,6 +264,24 @@ $roomOptions = $state['roomOptions'];
         <div class="modal-content">
             <form method="post" autocomplete="off">
                 <input type="hidden" name="action" value="add_bed">
+                <?php
+                $addBedMode = strtolower(trim((string)($addFormData['add_mode'] ?? 'single')));
+                if (!in_array($addBedMode, ['single', 'bulk'], true)) {
+                    $addBedMode = 'single';
+                }
+                $addBedBulkCount = (int)($addFormData['bulk_count'] ?? 1);
+                if ($addBedBulkCount < 1) {
+                    $addBedBulkCount = 1;
+                }
+                $addRoomIds = $addFormData['room_ids'] ?? [];
+                if (!is_array($addRoomIds)) {
+                    $addRoomIds = [];
+                }
+                $addRoomIds = array_values(array_unique(array_map('intval', $addRoomIds)));
+                if (empty($addRoomIds) && (int)($addFormData['room_id'] ?? 0) > 0) {
+                    $addRoomIds[] = (int)$addFormData['room_id'];
+                }
+                ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-grid-3x3-gap"></i> Add Bed</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -273,12 +293,32 @@ $roomOptions = $state['roomOptions'];
                                 <div class="border rounded-3 p-3 h-100 bg-light">
                                     <h6 class="mb-3 fw-semibold"><i class="bi bi-card-text me-1"></i> Bed Details</h6>
                                     <div class="row g-3">
+                                        <?php $addHostelId = (int)($addFormData['hostel_id'] ?? 0); ?>
                                         <div class="col-12">
-                                            <label class="form-label">Room</label>
-                                            <select name="room_id" class="form-select" required>
-                                                <option value="">Select Room</option>
+                                            <label class="form-label">Hostel</label>
+                                            <select name="hostel_id" id="addBedHostel" class="form-select" required>
+                                                <option value="">Select Hostel</option>
+                                                <?php foreach ($hostelOptions as $hostel): ?>
+                                                    <option
+                                                        value="<?= (int)$hostel['id'] ?>"
+                                                        data-hostel-name="<?= htmlspecialchars((string)$hostel['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                        <?= $addHostelId === (int)$hostel['id'] ? 'selected' : '' ?>
+                                                    >
+                                                        <?= htmlspecialchars((string)$hostel['name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Rooms</label>
+                                            <select name="room_ids[]" id="addBedRoom" class="form-select" data-placeholder="Select Rooms" required multiple size="6">
                                                 <?php foreach ($rooms as $room): ?>
-                                                    <option value="<?= (int)$room['id'] ?>" <?= ((int)($addFormData['room_id'] ?? 0) === (int)$room['id']) ? 'selected' : '' ?>>
+                                                    <option
+                                                        value="<?= (int)$room['id'] ?>"
+                                                        data-hostel-id="<?= (int)($room['hostel_id'] ?? 0) ?>"
+                                                        data-bed-capacity="<?= (int)($room['bed_capacity'] ?? 4) ?>"
+                                                        <?= in_array((int)$room['id'], $addRoomIds, true) ? 'selected' : '' ?>
+                                                    >
                                                         <?= htmlspecialchars((string)$room['hostel_name'] . ' - Room ' . (string)$room['room_number']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -286,36 +326,48 @@ $roomOptions = $state['roomOptions'];
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label">Bed Number</label>
-                                            <input type="text" name="bed_number" class="form-control" required value="<?= htmlspecialchars((string)($addFormData['bed_number'] ?? '')) ?>">
+                                            <input type="text" name="bed_number" id="addBedNumber" class="form-control" required value="<?= htmlspecialchars((string)($addFormData['bed_number'] ?? '')) ?>">
                                         </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Status</label>
-                                            <?php $addStatus = strtolower(trim((string)($addFormData['status'] ?? 'active'))); ?>
-                                            <select name="status" class="form-select">
-                                                <option value="active" <?= $addStatus === 'active' ? 'selected' : '' ?>>Active</option>
-                                                <option value="maintenance" <?= $addStatus === 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
-                                                <option value="inactive" <?= $addStatus === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Add Mode</label>
+                                            <select name="add_mode" id="addBedMode" class="form-select">
+                                                <option value="single" <?= $addBedMode === 'single' ? 'selected' : '' ?>>Single</option>
+                                                <option value="bulk" <?= $addBedMode === 'bulk' ? 'selected' : '' ?>>Bulk</option>
                                             </select>
+                                        </div>
+                                        <div class="col-md-6 <?= $addBedMode === 'bulk' ? '' : 'd-none' ?>" id="addBedBulkCountWrap">
+                                            <label class="form-label">Number of Beds</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="200"
+                                                name="bulk_count"
+                                                id="addBedBulkCount"
+                                                class="form-control"
+                                                value="<?= $addBedBulkCount ?>"
+                                                <?= $addBedMode === 'bulk' ? 'required' : '' ?>
+                                            >
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-5">
-                                <div class="border rounded-3 p-3 h-100">
+                                <div class="border rounded-3 p-3 h-100 d-flex flex-column">
                                     <h6 class="mb-3 fw-semibold"><i class="bi bi-info-circle me-1"></i> Quick Notes</h6>
-                                    <ul class="small text-muted mb-0 ps-3">
+                                    <ul class="small text-muted mb-0 ps-3 flex-grow-1">
                                         <li>Bed number must be unique inside the same room.</li>
+                                        <li>Hold Ctrl (Windows) or Cmd (Mac) to select multiple rooms.</li>
                                         <li>Use <strong>Maintenance</strong> when bed is temporarily unavailable.</li>
                                         <li>Use bulk action for faster status updates.</li>
                                     </ul>
+                                    <div class="mt-4 d-flex flex-wrap gap-2">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check-circle me-1"></i> Save Bed</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check-circle me-1"></i> Save Bed</button>
                 </div>
             </form>
         </div>
@@ -339,12 +391,32 @@ $roomOptions = $state['roomOptions'];
                                 <div class="border rounded-3 p-3 h-100 bg-light">
                                     <h6 class="mb-3 fw-semibold"><i class="bi bi-pencil-square me-1"></i> Edit Details</h6>
                                     <div class="row g-3">
-                                        <div class="col-12">
+                                        <?php $editHostelId = (int)($editFormData['hostel_id'] ?? 0); ?>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Hostel</label>
+                                            <select name="hostel_id" id="editBedHostel" class="form-select" required>
+                                                <option value="">Select Hostel</option>
+                                                <?php foreach ($hostelOptions as $hostel): ?>
+                                                    <option
+                                                        value="<?= (int)$hostel['id'] ?>"
+                                                        data-hostel-name="<?= htmlspecialchars((string)$hostel['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                        <?= $editHostelId === (int)$hostel['id'] ? 'selected' : '' ?>
+                                                    >
+                                                        <?= htmlspecialchars((string)$hostel['name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
                                             <label class="form-label">Room</label>
-                                            <select name="room_id" id="editBedRoom" class="form-select" required>
+                                            <select name="room_id" id="editBedRoom" class="form-select" data-placeholder="Select Room" required>
                                                 <option value="">Select Room</option>
                                                 <?php foreach ($rooms as $room): ?>
-                                                    <option value="<?= (int)$room['id'] ?>">
+                                                    <option
+                                                        value="<?= (int)$room['id'] ?>"
+                                                        data-hostel-id="<?= (int)($room['hostel_id'] ?? 0) ?>"
+                                                        <?= ((int)($editFormData['room_id'] ?? 0) === (int)$room['id']) ? 'selected' : '' ?>
+                                                    >
                                                         <?= htmlspecialchars((string)$room['hostel_name'] . ' - Room ' . (string)$room['room_number']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -408,6 +480,8 @@ $roomOptions = $state['roomOptions'];
     id="manageBedsConfig"
     data-open-modal="<?= htmlspecialchars($openModal, ENT_QUOTES, 'UTF-8') ?>"
     data-edit-form="<?= htmlspecialchars(json_encode($editFormData), ENT_QUOTES, 'UTF-8') ?>"
+    data-initial-hostel-id="<?= $initialHostelId ?>"
+    data-initial-room-id="<?= $initialRoomId ?>"
     data-total-beds="<?= (int)count($beds) ?>">
 </div>
 <script src="../assets/js/admin-manage-beds.js"></script>

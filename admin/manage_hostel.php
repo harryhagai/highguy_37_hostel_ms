@@ -302,6 +302,14 @@ $locationOptions = $state['locationOptions'];
                                                 <option value="all" <?= $addGender === 'all' ? 'selected' : '' ?>>All Genders</option>
                                             </select>
                                         </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Description</label>
+                                            <textarea
+                                                name="description"
+                                                class="form-control"
+                                                rows="3"
+                                                placeholder="Hostel description (optional)"><?= htmlspecialchars((string)($addFormData['description'] ?? '')) ?></textarea>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -358,6 +366,15 @@ $locationOptions = $state['locationOptions'];
                                                 <option value="female">Female Only</option>
                                                 <option value="all">All Genders</option>
                                             </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Description</label>
+                                            <textarea
+                                                name="description"
+                                                id="editHostelDescription"
+                                                class="form-control"
+                                                rows="3"
+                                                placeholder="Hostel description (optional)"></textarea>
                                         </div>
                                     </div>
                                 </div>

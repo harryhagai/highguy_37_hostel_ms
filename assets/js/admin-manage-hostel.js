@@ -18,6 +18,14 @@
         });
     }
 
+    function showWarning(message) {
+        if (window.AdminAlerts && typeof window.AdminAlerts.warn === 'function') {
+            window.AdminAlerts.warn(message);
+            return;
+        }
+        window.alert(message);
+    }
+
     function fillHostelEdit(hostel) {
         var setValue = function (id, value, fallback) {
             var el = document.getElementById(id);
@@ -29,6 +37,7 @@
         setValue('editHostelName', hostel.name, '');
         setValue('editHostelLocation', hostel.location, '');
         setValue('editHostelGender', hostel.gender, 'all');
+        setValue('editHostelDescription', hostel.description, '');
         setValue('editHostelExistingImage', hostel.hostel_image, '');
 
         var preview = document.getElementById('editHostelPreview');
@@ -291,7 +300,8 @@
             var action = bulkActionType ? bulkActionType.value : '';
             if (!action || !ids.length) {
                 event.preventDefault();
-                window.alert('Select at least one hostel and choose a bulk action.');
+                bulkForm.dataset.skipSwalConfirm = '1';
+                showWarning('Select at least one hostel and choose a bulk action.');
                 return;
             }
 

@@ -9,6 +9,42 @@
         return params.get('page') || 'dashboard';
     }
 
+    function getQueryParamsWithoutPage(source) {
+        var params = source instanceof URLSearchParams
+            ? new URLSearchParams(source.toString())
+            : new URLSearchParams(source || window.location.search);
+        params.delete('page');
+        params.delete('spa');
+        return params;
+    }
+
+    function resetTransientUi() {
+        document.querySelectorAll('.modal.show').forEach(function (modalEl) {
+            if (window.bootstrap && window.bootstrap.Modal) {
+                var instance = window.bootstrap.Modal.getInstance(modalEl);
+                if (instance) {
+                    instance.hide();
+                }
+            }
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            modalEl.setAttribute('aria-hidden', 'true');
+            modalEl.removeAttribute('aria-modal');
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+            backdrop.remove();
+        });
+
+        document.querySelectorAll('.tooltip').forEach(function (tooltip) {
+            tooltip.remove();
+        });
+
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+    }
+
     function setActiveMenu(page) {
         document.querySelectorAll('.sidebar a[data-spa-page]').forEach(function (link) {
             link.classList.toggle('active', link.dataset.spaPage === page);
@@ -75,18 +111,28 @@
         );
     }
 
-    function loadPage(page, pushState) {
+    function loadPage(page, pushState, extraQuery) {
         if (!page) page = 'dashboard';
 
         if (currentController) {
             currentController.abort();
         }
 
+        resetTransientUi();
+
+        var pageParams = extraQuery instanceof URLSearchParams
+            ? new URLSearchParams(extraQuery.toString())
+            : new URLSearchParams(extraQuery || '');
+        pageParams.set('page', page);
+
+        var requestParams = new URLSearchParams(pageParams.toString());
+        requestParams.set('spa', '1');
+
         currentController = new AbortController();
         content.classList.add('is-loading');
         content.innerHTML = getSkeletonMarkup(page);
 
-        fetch('admin_dashboard_layout.php?spa=1&page=' + encodeURIComponent(page), {
+        fetch('admin_dashboard_layout.php?' + requestParams.toString(), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             signal: currentController.signal
         })
@@ -100,10 +146,11 @@
                 runPageHooks();
                 setActiveMenu(page);
                 content.dataset.currentPage = page;
+                content.dataset.currentQuery = getQueryParamsWithoutPage(pageParams).toString();
 
                 if (pushState) {
                     var url = new URL(window.location.href);
-                    url.searchParams.set('page', page);
+                    url.search = pageParams.toString();
                     window.history.pushState({ page: page }, '', url.toString());
                 }
             })
@@ -126,18 +173,14 @@
 
         event.preventDefault();
         var targetPage = link.dataset.spaPage || 'dashboard';
-
-        if (content.dataset.currentPage === targetPage) {
-            setActiveMenu(targetPage);
-            return;
-        }
-
-        loadPage(targetPage, true);
+        var targetQuery = new URLSearchParams(link.dataset.spaQuery || '');
+        loadPage(targetPage, true, targetQuery);
     });
 
     window.addEventListener('popstate', function () {
-        loadPage(getPageFromUrl(), false);
+        loadPage(getPageFromUrl(), false, getQueryParamsWithoutPage(window.location.search));
     });
 
+    content.dataset.currentQuery = getQueryParamsWithoutPage(window.location.search).toString();
     setActiveMenu(content.dataset.currentPage || getPageFromUrl());
 })();

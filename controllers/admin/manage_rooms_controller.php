@@ -2,12 +2,22 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
+require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
 
 $errors = [];
 $success = '';
 $openModal = '';
 $editFormData = null;
 $addFormData = null;
+
+$flash = admin_prg_consume('manage_rooms');
+if (is_array($flash)) {
+    $errors = is_array($flash['errors'] ?? null) ? $flash['errors'] : [];
+    $success = (string)($flash['success'] ?? '');
+    $openModal = (string)($flash['openModal'] ?? '');
+    $editFormData = is_array($flash['editFormData'] ?? null) ? $flash['editFormData'] : null;
+    $addFormData = is_array($flash['addFormData'] ?? null) ? $flash['addFormData'] : null;
+}
 
 $tableExists = static function (PDO $db, string $table): bool {
     static $cache = [];
@@ -45,6 +55,14 @@ $columnExists = static function (PDO $db, string $table, string $column): bool {
 $hasRoomImagesTable = $tableExists($pdo, 'room_images');
 $hasRoomImageIdCol = $columnExists($pdo, 'rooms', 'room_image_id');
 $supportsRoomImages = $hasRoomImagesTable && $hasRoomImageIdCol;
+$hasRoomBedCapacityCol = $columnExists($pdo, 'rooms', 'bed_capacity');
+$hasBedsTable = $tableExists($pdo, 'beds');
+$hasBookingsTable = $tableExists($pdo, 'bookings');
+$bookingHasBedId = $hasBookingsTable && $columnExists($pdo, 'bookings', 'bed_id');
+$bookingHasStatus = $hasBookingsTable && $columnExists($pdo, 'bookings', 'status');
+$bookingHasStartDate = $hasBookingsTable && $columnExists($pdo, 'bookings', 'start_date');
+$bookingHasEndDate = $hasBookingsTable && $columnExists($pdo, 'bookings', 'end_date');
+$bedsHaveStatus = $hasBedsTable && $columnExists($pdo, 'beds', 'status');
 
 $uploadRoomImage = static function (array $file, string $targetDir, ?string &$error = null): ?string {
     if (empty($file['name'])) {
@@ -157,6 +175,50 @@ $resolveRoomImageId = static function (
 };
 
 $hostels = $pdo->query('SELECT id, name FROM hostels ORDER BY name ASC')->fetchAll(PDO::FETCH_ASSOC);
+$hostelIdMap = [];
+foreach ($hostels as $hostel) {
+    $hostelId = (int)($hostel['id'] ?? 0);
+    if ($hostelId > 0) {
+        $hostelIdMap[$hostelId] = true;
+    }
+}
+
+$initialHostelId = isset($_GET['hostel_id']) ? (int)$_GET['hostel_id'] : 0;
+if ($initialHostelId > 0 && !isset($hostelIdMap[$initialHostelId])) {
+    $initialHostelId = 0;
+}
+
+$buildNumberSeries = static function (string $seed, int $count, string $entityLabel, array &$errorBag): array {
+    $value = trim($seed);
+    $safeLabel = trim($entityLabel) !== '' ? trim($entityLabel) : 'Item';
+    $amount = max(1, $count);
+
+    if ($value === '') {
+        $errorBag[] = $safeLabel . ' number is required.';
+        return [];
+    }
+
+    if ($amount === 1) {
+        return [$value];
+    }
+
+    if (!preg_match('/^(.*?)(\d+)$/', $value, $matches)) {
+        $errorBag[] = $safeLabel . ' number must end with digits for bulk add.';
+        return [];
+    }
+
+    $prefix = (string)$matches[1];
+    $digits = (string)$matches[2];
+    $width = max(1, strlen($digits));
+    $start = (int)$digits;
+
+    $series = [];
+    for ($index = 0; $index < $amount; $index++) {
+        $series[] = $prefix . str_pad((string)($start + $index), $width, '0', STR_PAD_LEFT);
+    }
+
+    return $series;
+};
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
@@ -164,9 +226,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add_room') {
         $hostelId = (int)($_POST['hostel_id'] ?? 0);
         $roomNumber = trim((string)($_POST['room_number'] ?? ''));
+        $bedCapacityRaw = trim((string)($_POST['bed_capacity'] ?? '4'));
+        $bedCapacity = (int)$bedCapacityRaw;
         $roomType = trim((string)($_POST['room_type'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
         $priceRaw = $_POST['price'] ?? '';
+        $addMode = strtolower(trim((string)($_POST['add_mode'] ?? 'single')));
+        if (!in_array($addMode, ['single', 'bulk'], true)) {
+            $addMode = 'single';
+        }
+        $bulkCountRaw = (int)($_POST['bulk_count'] ?? 2);
+        $bulkCount = $bulkCountRaw;
+        if ($bulkCount < 2) {
+            $bulkCount = 2;
+        }
+        if ($bulkCount > 200) {
+            $bulkCount = 200;
+        }
+        $requestedCount = $addMode === 'bulk' ? $bulkCount : 1;
 
         $selectedImageId = (int)($_POST['room_image_id'] ?? 0);
         $imageLabel = trim((string)($_POST['room_image_label'] ?? ''));
@@ -180,14 +257,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($roomType === '') {
             $errors[] = 'Room type is required.';
         }
+        if ($bedCapacityRaw === '' || !preg_match('/^\d+$/', $bedCapacityRaw)) {
+            $errors[] = 'Bed capacity must be a whole number.';
+        } elseif ($bedCapacity < 1 || $bedCapacity > 4) {
+            $errors[] = 'Bed capacity must be between 1 and 4.';
+        }
         if (!is_numeric($priceRaw) || (float)$priceRaw < 0) {
             $errors[] = 'Price must be a non-negative number.';
         }
+        if ($addMode === 'bulk' && $bulkCountRaw < 2) {
+            $errors[] = 'Bulk add requires at least 2 rooms.';
+        }
 
-        $stmt = $pdo->prepare('SELECT id FROM rooms WHERE hostel_id = ? AND room_number = ?');
-        $stmt->execute([$hostelId, $roomNumber]);
-        if ($stmt->fetch()) {
-            $errors[] = 'Room number already exists in this hostel.';
+        $roomNumbers = $buildNumberSeries($roomNumber, $requestedCount, 'Room', $errors);
+        $uniqueRoomNumbers = array_values(array_unique($roomNumbers));
+        if (!empty($roomNumbers) && count($uniqueRoomNumbers) !== count($roomNumbers)) {
+            $errors[] = 'Generated room numbers contain duplicates.';
+        }
+
+        if (empty($errors) && !empty($uniqueRoomNumbers)) {
+            $placeholders = implode(',', array_fill(0, count($uniqueRoomNumbers), '?'));
+            $stmt = $pdo->prepare('SELECT room_number FROM rooms WHERE hostel_id = ? AND room_number IN (' . $placeholders . ')');
+            $stmt->execute(array_merge([$hostelId], $uniqueRoomNumbers));
+            $existing = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            if (!empty($existing)) {
+                $preview = array_slice(array_map('strval', $existing), 0, 5);
+                $errors[] = 'Room number already exists in this hostel: ' . implode(', ', $preview) . (count($existing) > 5 ? '...' : '');
+            }
         }
 
         $uploadedImageFile = $_FILES['room_image_upload'] ?? ($_FILES['room_image'] ?? []);
@@ -203,19 +299,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
 
         if (empty($errors)) {
-            if ($supportsRoomImages) {
-                $stmt = $pdo->prepare('INSERT INTO rooms (hostel_id, room_number, room_type, price, description, room_image_id) VALUES (?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$hostelId, $roomNumber, $roomType, (float)$priceRaw, $description, $resolvedImageId]);
-            } else {
-                $stmt = $pdo->prepare('INSERT INTO rooms (hostel_id, room_number, room_type, price, description) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([$hostelId, $roomNumber, $roomType, (float)$priceRaw, $description]);
+            try {
+                $pdo->beginTransaction();
+                if ($supportsRoomImages && $hasRoomBedCapacityCol) {
+                    $stmt = $pdo->prepare('INSERT INTO rooms (hostel_id, room_number, bed_capacity, room_type, price, description, room_image_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                    foreach ($uniqueRoomNumbers as $numberValue) {
+                        $stmt->execute([$hostelId, $numberValue, $bedCapacity, $roomType, (float)$priceRaw, $description, $resolvedImageId]);
+                    }
+                } elseif ($supportsRoomImages && !$hasRoomBedCapacityCol) {
+                    $stmt = $pdo->prepare('INSERT INTO rooms (hostel_id, room_number, room_type, price, description, room_image_id) VALUES (?, ?, ?, ?, ?, ?)');
+                    foreach ($uniqueRoomNumbers as $numberValue) {
+                        $stmt->execute([$hostelId, $numberValue, $roomType, (float)$priceRaw, $description, $resolvedImageId]);
+                    }
+                } elseif (!$supportsRoomImages && $hasRoomBedCapacityCol) {
+                    $stmt = $pdo->prepare('INSERT INTO rooms (hostel_id, room_number, bed_capacity, room_type, price, description) VALUES (?, ?, ?, ?, ?, ?)');
+                    foreach ($uniqueRoomNumbers as $numberValue) {
+                        $stmt->execute([$hostelId, $numberValue, $bedCapacity, $roomType, (float)$priceRaw, $description]);
+                    }
+                } else {
+                    $stmt = $pdo->prepare('INSERT INTO rooms (hostel_id, room_number, room_type, price, description) VALUES (?, ?, ?, ?, ?)');
+                    foreach ($uniqueRoomNumbers as $numberValue) {
+                        $stmt->execute([$hostelId, $numberValue, $roomType, (float)$priceRaw, $description]);
+                    }
+                }
+                $pdo->commit();
+                $success = count($uniqueRoomNumbers) > 1
+                    ? count($uniqueRoomNumbers) . ' rooms added successfully.'
+                    : 'Room added successfully.';
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errors[] = 'Failed to add room(s). Please try again.';
             }
-            $success = 'Room added successfully.';
         } else {
             $openModal = 'addRoomModal';
             $addFormData = [
                 'hostel_id' => $hostelId,
                 'room_number' => $roomNumber,
+                'bed_capacity' => $bedCapacityRaw,
+                'add_mode' => $addMode,
+                'bulk_count' => $bulkCountRaw,
                 'room_type' => $roomType,
                 'price' => $priceRaw,
                 'description' => $description,
@@ -229,6 +353,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int)($_POST['id'] ?? 0);
         $hostelId = (int)($_POST['hostel_id'] ?? 0);
         $roomNumber = trim((string)($_POST['room_number'] ?? ''));
+        $bedCapacityRaw = trim((string)($_POST['bed_capacity'] ?? '4'));
+        $bedCapacity = (int)$bedCapacityRaw;
         $roomType = trim((string)($_POST['room_type'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
         $priceRaw = $_POST['price'] ?? '';
@@ -258,8 +384,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($roomType === '') {
             $errors[] = 'Room type is required.';
         }
+        if ($bedCapacityRaw === '' || !preg_match('/^\d+$/', $bedCapacityRaw)) {
+            $errors[] = 'Bed capacity must be a whole number.';
+        } elseif ($bedCapacity < 1 || $bedCapacity > 4) {
+            $errors[] = 'Bed capacity must be between 1 and 4.';
+        }
         if (!is_numeric($priceRaw) || (float)$priceRaw < 0) {
             $errors[] = 'Price must be a non-negative number.';
+        }
+
+        if (empty($errors) && $id > 0 && $hasRoomBedCapacityCol && $hasBedsTable) {
+            $bedCountStmt = $pdo->prepare('SELECT COUNT(*) FROM beds WHERE room_id = ?');
+            $bedCountStmt->execute([$id]);
+            $existingBeds = (int)$bedCountStmt->fetchColumn();
+            if ($existingBeds > $bedCapacity) {
+                $errors[] = 'Bed capacity cannot be less than current beds in this room (' . $existingBeds . ').';
+            }
         }
 
         $stmt = $pdo->prepare('SELECT id FROM rooms WHERE hostel_id = ? AND room_number = ? AND id != ?');
@@ -281,9 +421,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
 
         if (empty($errors)) {
-            if ($supportsRoomImages) {
+            if ($supportsRoomImages && $hasRoomBedCapacityCol) {
+                $stmt = $pdo->prepare('UPDATE rooms SET hostel_id = ?, room_number = ?, bed_capacity = ?, room_type = ?, price = ?, description = ?, room_image_id = ? WHERE id = ?');
+                $stmt->execute([$hostelId, $roomNumber, $bedCapacity, $roomType, (float)$priceRaw, $description, $resolvedImageId, $id]);
+            } elseif ($supportsRoomImages && !$hasRoomBedCapacityCol) {
                 $stmt = $pdo->prepare('UPDATE rooms SET hostel_id = ?, room_number = ?, room_type = ?, price = ?, description = ?, room_image_id = ? WHERE id = ?');
                 $stmt->execute([$hostelId, $roomNumber, $roomType, (float)$priceRaw, $description, $resolvedImageId, $id]);
+            } elseif (!$supportsRoomImages && $hasRoomBedCapacityCol) {
+                $stmt = $pdo->prepare('UPDATE rooms SET hostel_id = ?, room_number = ?, bed_capacity = ?, room_type = ?, price = ?, description = ? WHERE id = ?');
+                $stmt->execute([$hostelId, $roomNumber, $bedCapacity, $roomType, (float)$priceRaw, $description, $id]);
             } else {
                 $stmt = $pdo->prepare('UPDATE rooms SET hostel_id = ?, room_number = ?, room_type = ?, price = ?, description = ? WHERE id = ?');
                 $stmt->execute([$hostelId, $roomNumber, $roomType, (float)$priceRaw, $description, $id]);
@@ -295,6 +441,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'id' => $id,
                 'hostel_id' => $hostelId,
                 'room_number' => $roomNumber,
+                'bed_capacity' => $bedCapacityRaw,
                 'room_type' => $roomType,
                 'price' => $priceRaw,
                 'description' => $description,
@@ -347,6 +494,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+
+    admin_prg_redirect('manage_rooms', [
+        'errors' => $errors,
+        'success' => $success,
+        'openModal' => $openModal,
+        'editFormData' => $editFormData,
+        'addFormData' => $addFormData,
+    ]);
 }
 
 $roomsSql = '
@@ -355,11 +510,24 @@ $roomsSql = '
         r.hostel_id,
         h.name AS hostel_name,
         r.room_number,
+        ' . ($hasRoomBedCapacityCol ? 'r.bed_capacity' : '4 AS bed_capacity') . ',
         r.room_type,
         r.price,
         r.description,
         r.created_at,
         r.updated_at';
+
+if ($hasBedsTable) {
+    $roomsSql .= ',
+        COALESCE(bs.total_beds, 0) AS total_beds,
+        COALESCE(bs.active_beds, 0) AS active_beds,
+        COALESCE(bs.free_beds, 0) AS free_beds';
+} else {
+    $roomsSql .= ',
+        0 AS total_beds,
+        0 AS active_beds,
+        0 AS free_beds';
+}
 
 if ($supportsRoomImages) {
     $roomsSql .= ', r.room_image_id, ri.image_path AS room_image_path, ri.image_label AS room_image_label';
@@ -374,6 +542,49 @@ $roomsSql .= '
 if ($supportsRoomImages) {
     $roomsSql .= '
     LEFT JOIN room_images ri ON ri.id = r.room_image_id';
+}
+
+if ($hasBedsTable) {
+    $activeBedCondition = $bedsHaveStatus ? "b.status = 'active'" : '1=1';
+
+    if ($bookingHasBedId) {
+        $bookingJoinConditions = [];
+        if ($bookingHasStatus) {
+            $bookingJoinConditions[] = "LOWER(COALESCE(bk.status, '')) IN ('pending', 'confirmed', 'approved')";
+        }
+        if ($bookingHasStartDate && $bookingHasEndDate) {
+            $bookingJoinConditions[] = 'CURDATE() >= bk.start_date';
+            $bookingJoinConditions[] = 'CURDATE() < bk.end_date';
+        }
+        $bookingJoinSql = !empty($bookingJoinConditions)
+            ? implode(' AND ', $bookingJoinConditions)
+            : '1=1';
+
+        $roomsSql .= '
+    LEFT JOIN (
+        SELECT
+            b.room_id,
+            COUNT(b.id) AS total_beds,
+            SUM(CASE WHEN ' . $activeBedCondition . ' THEN 1 ELSE 0 END) AS active_beds,
+            SUM(CASE WHEN ' . $activeBedCondition . ' AND bk.id IS NULL THEN 1 ELSE 0 END) AS free_beds
+        FROM beds b
+        LEFT JOIN bookings bk
+            ON bk.bed_id = b.id
+           AND ' . $bookingJoinSql . '
+        GROUP BY b.room_id
+    ) bs ON bs.room_id = r.id';
+    } else {
+        $roomsSql .= '
+    LEFT JOIN (
+        SELECT
+            b.room_id,
+            COUNT(b.id) AS total_beds,
+            SUM(CASE WHEN ' . $activeBedCondition . ' THEN 1 ELSE 0 END) AS active_beds,
+            SUM(CASE WHEN ' . $activeBedCondition . ' THEN 1 ELSE 0 END) AS free_beds
+        FROM beds b
+        GROUP BY b.room_id
+    ) bs ON bs.room_id = r.id';
+    }
 }
 
 $roomsSql .= '
@@ -397,6 +608,36 @@ $typeSet = [];
 foreach ($rooms as &$room) {
     $room['price'] = (float)$room['price'];
     $room['price_display'] = number_format((float)$room['price'], 2);
+    $capacityValue = (int)($room['bed_capacity'] ?? 4);
+    if ($capacityValue < 1) {
+        $capacityValue = 1;
+    } elseif ($capacityValue > 4) {
+        $capacityValue = 4;
+    }
+    $room['bed_capacity'] = $capacityValue;
+    $totalBeds = (int)($room['total_beds'] ?? 0);
+    $activeBeds = (int)($room['active_beds'] ?? 0);
+    $freeBeds = (int)($room['free_beds'] ?? 0);
+    if ($totalBeds < 0) {
+        $totalBeds = 0;
+    }
+    if ($activeBeds < 0) {
+        $activeBeds = 0;
+    }
+    if ($freeBeds < 0) {
+        $freeBeds = 0;
+    }
+
+    $room['beds_count'] = $totalBeds;
+    $room['active_beds'] = $activeBeds;
+
+    if ($hasBedsTable && $totalBeds > 0) {
+        $freeBedsRemaining = $activeBeds > 0 ? min($activeBeds, $freeBeds) : 0;
+    } else {
+        // Fallback for setups that still rely on room capacity without explicit beds rows.
+        $freeBedsRemaining = $capacityValue;
+    }
+    $room['free_beds_remaining'] = $freeBedsRemaining;
 
     $createdAt = (string)($room['created_at'] ?? '');
     $updatedAt = (string)($room['updated_at'] ?? '');
@@ -440,6 +681,13 @@ foreach ($rooms as $room) {
 natcasesort($roomTypeOptions);
 $roomTypeOptions = array_values($roomTypeOptions);
 
+if ($addFormData === null && $initialHostelId > 0) {
+    $addFormData = [
+        'hostel_id' => $initialHostelId,
+        'bed_capacity' => 4,
+    ];
+}
+
 return [
     'errors' => $errors,
     'success' => $success,
@@ -452,4 +700,5 @@ return [
     'roomTypeOptions' => $roomTypeOptions,
     'supportsRoomImages' => $supportsRoomImages,
     'roomImages' => $roomImages,
+    'initialHostelId' => $initialHostelId,
 ];

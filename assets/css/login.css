@@ -188,6 +188,41 @@
     box-shadow: 0 0 0 0.2rem rgba(28, 202, 216, 0.17);
 }
 
+.input-group-auth .form-control.is-invalid,
+.input-group-auth .form-select.is-invalid {
+    padding-right: 0.62rem;
+    background-image: none;
+}
+
+.btn-password-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--auth-border);
+    border-left: 0;
+    background: #f8fafc;
+    color: #475569;
+    padding: 0.42rem 0.62rem;
+    font-size: 0.84rem;
+}
+
+.email-trailing-icon {
+    cursor: default;
+    pointer-events: none;
+}
+
+.btn-password-toggle:hover,
+.btn-password-toggle:focus {
+    background: #eef3f7;
+    color: #0f172a;
+}
+
+.input-group.has-validation .invalid-feedback {
+    width: 100%;
+    margin-top: 0.32rem;
+    font-size: 0.77rem;
+}
+
 .btn-brand {
     background: var(--auth-title);
     border: none;

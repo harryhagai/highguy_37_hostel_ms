@@ -1,107 +1,81 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-require_once __DIR__ . '/../config/db_connection.php';
 require_once __DIR__ . '/../permission/role_permission.php';
 rp_require_roles(['user'], '../auth/login.php');
 
-$user_id = $_SESSION['user_id'];
-
-// Fetch user info
-$stmt = $pdo->prepare("SELECT username, email, phone, profile_photo FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Handle missing user
-if (!$user) {
-    echo '<div class="alert alert-danger m-4">User not found.</div>';
-    exit;
-}
-
-$profile_pic = $user['profile_photo'] ? $user['profile_photo'] : '../assets/images/prof.jpg';
-
-// Handle profile photo update only
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] == UPLOAD_ERR_OK) {
-    $ext = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
-    $filename = 'profile_' . $user_id . '_' . time() . '.' . $ext;
-    $target = '../assets/images/' . $filename;
-    if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $target)) {
-        $profile_pic = $target;
-        $pdo->prepare("UPDATE users SET profile_photo=? WHERE id=?")->execute([$profile_pic, $user_id]);
-        header("Location: user_dashboard_layout.php?page=profile&success=1");
-        exit;
-    } else {
-        $upload_error = "Failed to upload image. Please try again.";
-    }
-}
+$state = require __DIR__ . '/../controllers/user/profile_controller.php';
+$errors = $state['errors'];
+$success = $state['success'];
+$profile = $state['profile'];
+$supportsPhone = $state['supports_phone'];
+$supportsPhoto = $state['supports_photo'];
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Profile | HostelPro</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
-    
-    <link rel="stylesheet" href="../assets/css/user-profile.css">
-</head>
-<body>
-<div class="container d-flex justify-content-center align-items-center profile-page-container">
-    <div class="col-lg-9 col-md-11">
-        <div class="card profile-card shadow">
-            <div class="card-header">
-                <h3 class="mb-1"><i class="bi bi-person-circle"></i> My Profile</h3>
-                <small>Update your profile picture</small>
-            </div>
-            <div class="card-body">
-                <?php if (isset($_GET['success'])): ?>
-                    <div class="alert alert-success mb-4"><i class="bi bi-check-circle"></i> Profile photo updated successfully!</div>
-                <?php endif; ?>
-                <?php if (!empty($upload_error)): ?>
-                    <div class="alert alert-danger mb-4"><i class="bi bi-x-circle"></i> <?= htmlspecialchars($upload_error) ?></div>
-                <?php endif; ?>
-                <div class="row">
-                    <!-- Left: Profile Picture Update -->
-                    <div class="col-md-4 profile-left">
-                        <img src="<?= htmlspecialchars($profile_pic) ?>" class="profile-avatar" alt="Profile Photo">
-                        <div class="mb-3 w-100">
-                            <label class="form-label text-center w-100">Change Photo</label>
-                            <form method="post" enctype="multipart/form-data" id="photoForm">
+<div class="container-fluid px-0 user-profile-page">
+    <?php if (!empty($errors)): ?>
+        <div class="alert alert-danger">
+            <?= implode('<br>', array_map(static fn($err) => htmlspecialchars((string)$err), $errors)) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($success)): ?>
+        <div class="alert alert-success"><?= htmlspecialchars((string)$success) ?></div>
+    <?php endif; ?>
+
+    <?php if (!$profile): ?>
+        <div class="alert alert-warning">Unable to load your profile.</div>
+    <?php else: ?>
+        <div class="dashboard-card user-profile-shell">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="user-profile-left h-100">
+                        <img src="<?= htmlspecialchars((string)$profile['profile_photo_url']) ?>" alt="Profile Photo" class="user-profile-avatar">
+                        <h5 class="mb-1"><?= htmlspecialchars((string)$profile['username']) ?></h5>
+                        <p class="text-muted mb-3"><?= htmlspecialchars((string)$profile['email']) ?></p>
+
+                        <?php if ($supportsPhoto): ?>
+                            <form method="post" enctype="multipart/form-data" id="photoForm" class="w-100">
+                                <input type="hidden" name="action" value="update_photo">
+                                <label class="form-label">Update Photo</label>
                                 <input type="file" class="form-control" id="profilePhotoInput" name="profile_photo" accept="image/*">
                             </form>
-                        </div>
+                            <small class="text-muted mt-2 d-block">Image upload starts automatically once selected.</small>
+                        <?php endif; ?>
                     </div>
-                    <!-- Right: Profile Details (read-only) -->
-                    <div class="col-md-8 profile-details">
-                        <div class="mb-3">
-                            <label class="profile-info-label"><i class="bi bi-person"></i> Username</label>
-                            <div class="profile-info-value"><?= htmlspecialchars($user['username']) ?></div>
+                </div>
+                <div class="col-lg-8">
+                    <h4 class="mb-3"><i class="bi bi-person-circle me-2"></i>My Profile</h4>
+                    <form method="post" class="row g-3">
+                        <input type="hidden" name="action" value="update_account">
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" value="<?= htmlspecialchars((string)$profile['username']) ?>" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="profile-info-label"><i class="bi bi-envelope"></i> Email</label>
-                            <div class="profile-info-value"><?= htmlspecialchars($user['email']) ?></div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" value="<?= htmlspecialchars((string)$profile['email']) ?>" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="profile-info-label"><i class="bi bi-telephone"></i> Phone</label>
-                            <div class="profile-info-value"><?= htmlspecialchars($user['phone']) ?></div>
+                        <?php if ($supportsPhone): ?>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars((string)$profile['phone']) ?>">
+                            </div>
+                        <?php endif; ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Role</label>
+                            <input type="text" class="form-control" value="<?= htmlspecialchars((string)$profile['role']) ?>" readonly>
                         </div>
-                        <a href="user_dashboard_layout.php" class="btn btn-secondary mt-4 px-4"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
-                    </div>
+                        <div class="col-12 d-flex gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-check-circle me-1"></i>Save Changes
+                            </button>
+                            <a href="user_dashboard_layout.php?page=dashboard" data-spa-page="dashboard" data-no-spinner="true" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
+    <?php endif; ?>
 </div>
-<!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/user-profile.js"></script>
-</body>
-</html>
 
+<script src="../assets/js/user-profile.js"></script>

@@ -2,6 +2,7 @@
 $navPrefix = isset($navPrefix) ? $navPrefix : '';
 $homeHref = $navPrefix === '' ? '#home' : $navPrefix . '#home';
 $aboutHref = $navPrefix === '' ? '#about' : $navPrefix . '#about';
+$hostelsHref = $navPrefix === '' ? '#hostels' : $navPrefix . '#hostels';
 $contactHref = $navPrefix === '' ? '#contact' : $navPrefix . '#contact';
 $loginHref = $navPrefix === '' ? 'auth/login.php' : $navPrefix . 'auth/login.php';
 $registerHref = $navPrefix === '' ? 'auth/register.php' : $navPrefix . 'auth/register.php';
@@ -32,6 +33,7 @@ $registerHref = $navPrefix === '' ? 'auth/register.php' : $navPrefix . 'auth/reg
                 <ul class="footer-links">
                     <li><a href="<?= htmlspecialchars($homeHref) ?>">Home</a></li>
                     <li><a href="<?= htmlspecialchars($aboutHref) ?>">About Us</a></li>
+                    <li><a href="<?= htmlspecialchars($hostelsHref) ?>">Hostels</a></li>
                     <li><a href="<?= htmlspecialchars($contactHref) ?>">Contact Us</a></li>
                     <li><a href="<?= htmlspecialchars($registerHref) ?>">Get Started</a></li>
                 </ul>

@@ -4,9 +4,30 @@ $activeNav = isset($activeNav) ? $activeNav : '';
 
 $homeHref = $navPrefix === '' ? '#home' : $navPrefix . '#home';
 $aboutHref = $navPrefix === '' ? '#about' : $navPrefix . '#about';
+$hostelsHref = $navPrefix === '' ? '#hostels' : $navPrefix . '#hostels';
 $contactHref = $navPrefix === '' ? '#contact' : $navPrefix . '#contact';
-$loginHref = $navPrefix === '' ? 'auth/login.php' : $navPrefix . 'auth/login.php';
-$registerHref = $navPrefix === '' ? 'auth/register.php' : $navPrefix . 'auth/register.php';
+
+$resolveAuthBase = static function (string $prefix): string {
+    $value = trim($prefix);
+    if ($value === '') {
+        return '';
+    }
+
+    if (substr($value, -1) === '/') {
+        return $value;
+    }
+
+    if (preg_match('/\.php(?:[#?].*)?$/i', $value)) {
+        $slashPos = strrpos($value, '/');
+        return $slashPos === false ? '' : substr($value, 0, $slashPos + 1);
+    }
+
+    return rtrim($value, '/') . '/';
+};
+
+$authBase = $resolveAuthBase($navPrefix);
+$loginHref = $authBase . 'auth/login.php';
+$registerHref = $authBase . 'auth/register.php';
 ?>
 <nav class="navbar navbar-expand-lg fixed-top site-header">
     <div class="container">
@@ -43,6 +64,12 @@ $registerHref = $navPrefix === '' ? 'auth/register.php' : $navPrefix . 'auth/reg
                         <a class="nav-link<?= $activeNav === 'about' ? ' is-active' : '' ?>" href="<?= htmlspecialchars($aboutHref) ?>">
                             <i class="bi bi-info-circle header-link-icon" aria-hidden="true"></i>
                             <span>About</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link<?= $activeNav === 'hostels' ? ' is-active' : '' ?>" href="<?= htmlspecialchars($hostelsHref) ?>">
+                            <i class="bi bi-buildings header-link-icon" aria-hidden="true"></i>
+                            <span>Hostels</span>
                         </a>
                     </li>
                     <li class="nav-item">

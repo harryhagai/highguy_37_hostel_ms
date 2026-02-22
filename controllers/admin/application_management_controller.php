@@ -2,6 +2,7 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
+require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
 
 $columnExists = static function (PDO $db, string $table, string $column): bool {
     $stmt = $db->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
@@ -11,6 +12,12 @@ $columnExists = static function (PDO $db, string $table, string $column): bool {
 
 $success = '';
 $errors = [];
+
+$flash = admin_prg_consume('application_management');
+if (is_array($flash)) {
+    $errors = is_array($flash['errors'] ?? null) ? $flash['errors'] : [];
+    $success = (string)($flash['success'] ?? '');
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -31,6 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = $stmt->rowCount() ? 'Application rejected successfully.' : 'Application is already processed.';
         }
     }
+
+    admin_prg_redirect('application_management', [
+        'errors' => $errors,
+        'success' => $success,
+    ]);
 }
 
 $hasBookingRoom = $columnExists($pdo, 'bookings', 'room_id');
