@@ -118,16 +118,19 @@ $successMessage = $authState['success_message'];
                                 </div>
                             </div>
 
-                            <div class="form-check mb-3">
-                                <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    value="1"
-                                    id="remember_me"
-                                    name="remember_me"
-                                    <?= $rememberMe ? 'checked' : '' ?>
-                                >
-                                <label class="form-check-label" for="remember_me">Remember me</label>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        value="1"
+                                        id="remember_me"
+                                        name="remember_me"
+                                        <?= $rememberMe ? 'checked' : '' ?>
+                                    >
+                                    <label class="form-check-label" for="remember_me">Remember me</label>
+                                </div>
+                                <a href="forgot_password.php" class="auth-link-accent small">Forgot password?</a>
                             </div>
 
                             <button type="submit" class="btn btn-brand w-100">

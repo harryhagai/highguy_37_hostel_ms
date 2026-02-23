@@ -70,6 +70,29 @@
         var hostelModal = scope.getElementById('studentHostelModal');
         if (hostelModal && !hostelModal.dataset.bound) {
             hostelModal.dataset.bound = '1';
+            var selectRoomBtn = scope.getElementById('studentModalSelectRoomBtn');
+
+            if (selectRoomBtn && !selectRoomBtn.dataset.bound) {
+                selectRoomBtn.dataset.bound = '1';
+                selectRoomBtn.addEventListener('click', function () {
+                    // Ensure modal/backdrop is fully cleared before SPA navigation.
+                    var modalInstance = window.bootstrap && window.bootstrap.Modal
+                        ? window.bootstrap.Modal.getInstance(hostelModal)
+                        : null;
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                    Array.from(document.querySelectorAll('.modal-backdrop')).forEach(function (el) {
+                        if (el && el.parentNode) {
+                            el.parentNode.removeChild(el);
+                        }
+                    });
+                });
+            }
+
             hostelModal.addEventListener('show.bs.modal', function (event) {
                 var button = event.relatedTarget;
                 if (!button) return;
@@ -90,6 +113,10 @@
                 var totalRooms = scope.getElementById('studentModalTotalRooms');
                 var freeRooms = scope.getElementById('studentModalFreeRooms');
                 var bedCapacity = scope.getElementById('studentModalBedCapacity');
+                var priceSummary = scope.getElementById('studentModalRoomPriceSummary');
+                var minPrice = scope.getElementById('studentModalMinPrice');
+                var maxPrice = scope.getElementById('studentModalMaxPrice');
+                var pricedRooms = scope.getElementById('studentModalPricedRooms');
 
                 if (image) image.src = hostel.image || '../assets/images/logo.png';
                 if (name) name.textContent = hostel.name || 'Hostel';
@@ -99,6 +126,23 @@
                 if (totalRooms) totalRooms.textContent = hostel.total_rooms || 0;
                 if (freeRooms) freeRooms.textContent = hostel.free_rooms || 0;
                 if (bedCapacity) bedCapacity.textContent = hostel.bed_capacity || 0;
+                if (priceSummary) priceSummary.textContent = hostel.room_price_summary || 'Price not set';
+                if (minPrice) minPrice.textContent = hostel.room_price_min_label || '-';
+                if (maxPrice) maxPrice.textContent = hostel.room_price_max_label || '-';
+                if (pricedRooms) pricedRooms.textContent = hostel.priced_rooms || 0;
+
+                if (selectRoomBtn) {
+                    var hostelId = Number(hostel.id || 0);
+                    if (hostelId > 0) {
+                        selectRoomBtn.href = 'user_dashboard_layout.php?page=book_room&hostel_id=' + encodeURIComponent(hostelId);
+                        selectRoomBtn.classList.remove('disabled');
+                        selectRoomBtn.removeAttribute('aria-disabled');
+                    } else {
+                        selectRoomBtn.href = '#';
+                        selectRoomBtn.classList.add('disabled');
+                        selectRoomBtn.setAttribute('aria-disabled', 'true');
+                    }
+                }
             });
         }
     }

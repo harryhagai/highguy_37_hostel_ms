@@ -22,6 +22,25 @@ if (siteHeader) {
     window.addEventListener("scroll", syncHeaderState, { passive: true });
 }
 
+// Hide floating mobile scroll indicator as soon as the user starts scrolling.
+const mobileScrollIndicator = document.querySelector(".hero-scroll-indicator-inline");
+if (mobileScrollIndicator) {
+    const hideIndicator = () => {
+        mobileScrollIndicator.classList.add("is-hidden");
+    };
+
+    if (window.scrollY > 8) {
+        hideIndicator();
+    } else {
+        const onFirstScroll = () => {
+            if (window.scrollY <= 8) return;
+            hideIndicator();
+            window.removeEventListener("scroll", onFirstScroll);
+        };
+        window.addEventListener("scroll", onFirstScroll, { passive: true });
+    }
+}
+
 // Auto-close mobile navbar after selecting any header link/action.
 const headerCollapse = document.getElementById("navbarNav");
 if (headerCollapse && window.bootstrap && typeof window.bootstrap.Collapse === "function") {
@@ -79,7 +98,8 @@ if (headerNavLinks.length > 0) {
 }
 
 // Hero image slideshow (every 3 seconds by default)
-let heroImage = document.querySelector(".hero-media-image[data-hero-images]");
+const heroImageCandidates = Array.from(document.querySelectorAll(".hero-media-image[data-hero-images]"));
+let heroImage = heroImageCandidates.find((image) => image.offsetParent !== null) || heroImageCandidates[0] || null;
 if (heroImage) {
     let heroImages = [];
     try {

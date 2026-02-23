@@ -6,13 +6,27 @@ $state = require __DIR__ . '/../controllers/user/book_bed_controller.php';
 $errors = $state['errors'];
 $message = $state['message'];
 $beds = $state['beds'];
+$canBook = (bool)($state['can_book'] ?? true);
+$bookingLock = is_array($state['booking_lock'] ?? null) ? $state['booking_lock'] : ['blocked' => false, 'message' => ''];
 $stats = $state['stats'];
 $filters = $state['filters'];
+$semesterOptions = is_array($state['semester_options'] ?? null) ? $state['semester_options'] : [];
+$defaultSemesterId = (int)($state['default_semester_id'] ?? 0);
+$userPhone = trim((string)($state['user_phone'] ?? ''));
+$semesterReady = (bool)($state['semester_ready'] ?? true);
+$canSubmitBooking = $canBook && $semesterReady && !empty($semesterOptions);
 ?>
 <div class="container-fluid px-0 user-book-bed-page">
     <?php if (!empty($errors)): ?>
         <div class="alert alert-danger mb-3">
             <?= implode('<br>', array_map(static fn($err) => htmlspecialchars((string)$err), $errors)) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($bookingLock['blocked'])): ?>
+        <div class="alert alert-warning mb-3">
+            <i class="bi bi-lock me-1"></i><?= htmlspecialchars((string)($bookingLock['message'] ?? 'Booking is locked for your account.')) ?>
+            <a href="user_dashboard_layout.php?page=my_bed" data-spa-page="my_bed" data-no-spinner="true" class="alert-link ms-1">View My Bed</a>
         </div>
     <?php endif; ?>
 
@@ -117,14 +131,6 @@ $filters = $state['filters'];
                     <option value="price_desc" <?= $filters['sort'] === 'price_desc' ? 'selected' : '' ?>>Price High-Low</option>
                 </select>
             </div>
-            <div class="col-xl-2 col-lg-4 col-sm-6">
-                <label class="form-label form-label-sm mb-1">Start Date</label>
-                <input type="date" name="start_date" class="form-control form-control-sm" value="<?= htmlspecialchars((string)$filters['start_date']) ?>">
-            </div>
-            <div class="col-xl-2 col-lg-4 col-sm-6">
-                <label class="form-label form-label-sm mb-1">End Date</label>
-                <input type="date" name="end_date" class="form-control form-control-sm" value="<?= htmlspecialchars((string)$filters['end_date']) ?>">
-            </div>
             <div class="col-xl-2 col-lg-4 col-sm-6 d-flex gap-2">
                 <button type="submit" class="btn btn-sm btn-outline-primary w-100">
                     <i class="bi bi-funnel me-1"></i>Apply
@@ -147,7 +153,7 @@ $filters = $state['filters'];
         <div class="dashboard-card my-room-empty-state text-center">
             <div class="mb-2"><i class="bi bi-search my-room-empty-icon"></i></div>
             <h5 class="mb-2">No beds found</h5>
-            <p class="text-muted mb-3">Try adjusting your filters or change date range to see more available beds.</p>
+            <p class="text-muted mb-3">Try adjusting your filters to see more available beds.</p>
             <a href="user_dashboard_layout.php?page=book_bed" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-outline-primary">
                 <i class="bi bi-arrow-clockwise me-1"></i>Clear Filters
             </a>
@@ -164,8 +170,6 @@ $filters = $state['filters'];
                     'price' => (float)$bed['price'],
                     'hostel_name' => (string)$bed['hostel_name'],
                     'hostel_location' => (string)$bed['hostel_location'],
-                    'start_date' => (string)$filters['start_date'],
-                    'end_date' => (string)$filters['end_date'],
                 ];
                 ?>
                 <article class="student-bed-card">
@@ -189,14 +193,24 @@ $filters = $state['filters'];
 
                         <p class="mb-3 room-price">TSh <?= number_format((float)$bed['price'], 2) ?></p>
 
-                        <button
-                            type="button"
-                            class="btn btn-outline-success w-100 book-bed-btn"
-                            data-bs-toggle="modal"
-                            data-bs-target="#bookBedModal"
-                            data-bed='<?= htmlspecialchars(json_encode($modalData), ENT_QUOTES, 'UTF-8') ?>'>
-                            <i class="bi bi-check2-circle me-1"></i>Book Bed
-                        </button>
+                        <?php if ($canSubmitBooking): ?>
+                            <button
+                                type="button"
+                                class="btn btn-outline-success w-100 book-bed-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#bookBedModal"
+                                data-bed='<?= htmlspecialchars(json_encode($modalData), ENT_QUOTES, 'UTF-8') ?>'>
+                                <i class="bi bi-check2-circle me-1"></i>Book Bed
+                            </button>
+                        <?php elseif (!$canBook): ?>
+                            <a href="user_dashboard_layout.php?page=my_bed" data-spa-page="my_bed" data-no-spinner="true" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-house-check me-1"></i>View My Bed
+                            </a>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                                <i class="bi bi-sliders me-1"></i>Semester Settings Required
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </article>
             <?php endforeach; ?>
@@ -204,57 +218,82 @@ $filters = $state['filters'];
     <?php endif; ?>
 </div>
 
-<div class="modal fade" id="bookBedModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form method="POST" class="modal-content" id="bookBedForm">
-            <input type="hidden" name="action" value="book_bed">
-            <input type="hidden" name="bed_id" id="bookBedId">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-1"></i>Confirm Bed Booking</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-2">
-                    <label class="form-label">Hostel</label>
-                    <input type="text" class="form-control" id="bookBedHostel" readonly>
+<?php if ($canSubmitBooking): ?>
+    <div class="modal fade" id="bookBedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" class="modal-content" id="bookBedForm">
+                <input type="hidden" name="action" value="book_bed">
+                <input type="hidden" name="bed_id" id="bookBedId">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-1"></i>Confirm Bed Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label">Location</label>
-                    <input type="text" class="form-control" id="bookBedLocation" readonly>
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Room</label>
-                    <input type="text" class="form-control" id="bookBedRoom" readonly>
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Bed Number</label>
-                    <input type="text" class="form-control" id="bookBedNumber" readonly>
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Price</label>
-                    <input type="text" class="form-control" id="bookBedPrice" readonly>
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Phone Number</label>
-                    <input type="tel" class="form-control" name="phone" placeholder="Enter phone number">
-                </div>
-                <div class="row g-2">
-                    <div class="col-sm-6">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" class="form-control" name="start_date" id="bookBedStartDate" value="<?= htmlspecialchars((string)$filters['start_date']) ?>">
+                <div class="modal-body">
+                    <div class="row g-2">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Hostel</label>
+                        <input type="text" class="form-control" id="bookBedHostel" readonly>
                     </div>
-                    <div class="col-sm-6">
-                        <label class="form-label">End Date</label>
-                        <input type="date" class="form-control" name="end_date" id="bookBedEndDate" value="<?= htmlspecialchars((string)$filters['end_date']) ?>">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-control" id="bookBedLocation" readonly>
                     </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Room</label>
+                        <input type="text" class="form-control" id="bookBedRoom" readonly>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Bed Number</label>
+                        <input type="text" class="form-control" id="bookBedNumber" readonly>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Room Monthly Price</label>
+                        <input type="text" class="form-control" id="bookBedPrice" readonly>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Your Phone Number</label>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($userPhone !== '' ? $userPhone : '-') ?>" readonly>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Semester</label>
+                        <select class="form-select" name="semester_id" id="bookBedSemester" required>
+                            <option value="">Select semester</option>
+                            <?php foreach ($semesterOptions as $semester): ?>
+                                <option
+                                    value="<?= (int)$semester['id'] ?>"
+                                    data-start-date="<?= htmlspecialchars((string)$semester['start_date']) ?>"
+                                    data-end-date="<?= htmlspecialchars((string)$semester['end_date']) ?>"
+                                    data-months="<?= (int)$semester['months'] ?>"
+                                    <?= (int)$semester['id'] === $defaultSemesterId ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars((string)$semester['name']) ?> (<?= (int)$semester['months'] ?> months)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Semester Period</label>
+                        <input type="text" class="form-control" id="bookBedSemesterPeriod" readonly>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Months</label>
+                        <input type="text" class="form-control" id="bookBedMonths" readonly>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Total Price</label>
+                        <input type="text" class="form-control" id="bookBedTotalPrice" readonly>
+                    </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        After confirming, you will be redirected to Payment Verification to submit your Transaction ID.
+                    </small>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-outline-success">Confirm Booking</button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-            </div>
-        </form>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-outline-success">Confirm Booking</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+<?php endif; ?>
 
 <script src="../assets/js/user-book-bed.js"></script>

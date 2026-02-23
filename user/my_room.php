@@ -5,6 +5,8 @@ rp_require_roles(['user'], '../auth/login.php');
 $state = require __DIR__ . '/../controllers/user/my_room_controller.php';
 $message = $state['message'];
 $room = $state['room'];
+$canBook = (bool)($state['can_book'] ?? true);
+$bookingLock = is_array($state['booking_lock'] ?? null) ? $state['booking_lock'] : ['blocked' => false, 'message' => ''];
 $residents = $state['residents'];
 $stats = $state['stats'];
 ?>
@@ -16,15 +18,27 @@ $stats = $state['stats'];
                 <p class="text-muted mb-0">See your room details and students sharing the same room.</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
-                <a href="user_dashboard_layout.php?page=book_bed" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Book Bed
-                </a>
+                <?php if ($canBook): ?>
+                    <a href="user_dashboard_layout.php?page=book_bed" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Book Bed
+                    </a>
+                <?php else: ?>
+                    <a href="user_dashboard_layout.php?page=my_bed" data-spa-page="my_bed" data-no-spinner="true" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-house-check me-1"></i>My Bed
+                    </a>
+                <?php endif; ?>
                 <a href="user_dashboard_layout.php?page=my_bookings" data-spa-page="my_bookings" data-no-spinner="true" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-journal-check me-1"></i>My Bookings
                 </a>
             </div>
         </div>
     </div>
+
+    <?php if (!empty($bookingLock['blocked'])): ?>
+        <div class="alert alert-warning mb-3">
+            <i class="bi bi-lock me-1"></i><?= htmlspecialchars((string)($bookingLock['message'] ?? 'Booking is currently locked for your account.')) ?>
+        </div>
+    <?php endif; ?>
 
     <?php if (!empty($message)): ?>
         <div class="alert alert-<?= htmlspecialchars((string)$message['type']) ?> mb-3">
@@ -37,9 +51,11 @@ $stats = $state['stats'];
             <div class="mb-2"><i class="bi bi-door-closed my-room-empty-icon"></i></div>
             <h5 class="mb-2">No room assignment yet</h5>
             <p class="text-muted mb-3">Once your bed booking is active, your room and roommate details will appear here.</p>
-            <a href="user_dashboard_layout.php?page=book_bed" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-outline-primary">
-                <i class="bi bi-search me-1"></i>Find Bed
-            </a>
+            <?php if ($canBook): ?>
+                <a href="user_dashboard_layout.php?page=book_bed" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-outline-primary">
+                    <i class="bi bi-search me-1"></i>Find Bed
+                </a>
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <div class="users-quick-stats mb-3">

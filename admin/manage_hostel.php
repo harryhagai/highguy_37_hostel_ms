@@ -112,6 +112,7 @@ $locationOptions = $state['locationOptions'];
                         <div id="bulkHostelSelectedInputs"></div>
                         <select name="bulk_action_type" id="bulkHostelActionType" class="form-select form-select-sm users-bulk-select">
                             <option value="">Bulk Action</option>
+                            <option value="set_active">Activate Selected</option>
                             <option value="set_inactive">Disable Selected</option>
                         </select>
                         <button type="submit" class="btn btn-sm btn-outline-danger" id="bulkHostelApplyBtn">
@@ -162,6 +163,7 @@ $locationOptions = $state['locationOptions'];
                     $genderLabel = $genderValue === 'male'
                         ? 'Male Only'
                         : ($genderValue === 'female' ? 'Female Only' : 'All Genders');
+                    $hostelStatus = (string)($hostel['status'] ?? 'inactive');
                     ?>
                     <tr
                         class="hostel-row"
@@ -172,6 +174,7 @@ $locationOptions = $state['locationOptions'];
                         data-gender="<?= htmlspecialchars($genderValue, ENT_QUOTES, 'UTF-8') ?>"
                         data-has-image="<?= $hasImage ? 'yes' : 'no' ?>"
                         data-created="<?= htmlspecialchars((string)($hostel['created_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                        data-status="<?= htmlspecialchars((string)$hostelStatus, ENT_QUOTES, 'UTF-8') ?>"
                     >
                         <td>
                             <input type="checkbox" class="form-check-input hostel-select" value="<?= $hostelId ?>" aria-label="Select hostel <?= $hostelId ?>">
@@ -196,7 +199,6 @@ $locationOptions = $state['locationOptions'];
                             </div>
                         </td>
                         <td>
-                            <?php $hostelStatus = (string)($hostel['status'] ?? 'inactive'); ?>
                             <?php if ($hostelStatus === 'active'): ?>
                                 <span class="badge user-status-badge user-status-active">Active</span>
                             <?php else: ?>
@@ -236,19 +238,33 @@ $locationOptions = $state['locationOptions'];
                             >
                                 <i class="bi bi-pencil me-1"></i>Update
                             </button>
-                            <form method="post" data-confirm="Disable this hostel (set inactive)?" class="d-inline">
-                                <input type="hidden" name="action" value="disable_hostel">
-                                <input type="hidden" name="id" value="<?= $hostelId ?>">
-                                <button
-                                    type="submit"
-                                    class="btn btn-sm btn-outline-danger"
-                                    data-bs-toggle-tooltip="tooltip"
-                                    title="Disable hostel"
-                                    <?= $hostelStatus === 'inactive' ? 'disabled' : '' ?>
-                                >
-                                    <i class="bi bi-slash-circle me-1"></i>Inactive
-                                </button>
-                            </form>
+                            <?php if ($hostelStatus === 'active'): ?>
+                                <form method="post" data-confirm="Disable this hostel (set inactive)?" class="d-inline">
+                                    <input type="hidden" name="action" value="disable_hostel">
+                                    <input type="hidden" name="id" value="<?= $hostelId ?>">
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        data-bs-toggle-tooltip="tooltip"
+                                        title="Disable hostel"
+                                    >
+                                        <i class="bi bi-slash-circle me-1"></i>Inactive
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <form method="post" data-confirm="Activate this hostel for students?" class="d-inline">
+                                    <input type="hidden" name="action" value="activate_hostel">
+                                    <input type="hidden" name="id" value="<?= $hostelId ?>">
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-success"
+                                        data-bs-toggle-tooltip="tooltip"
+                                        title="Activate hostel"
+                                    >
+                                        <i class="bi bi-check-circle me-1"></i>Activate
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

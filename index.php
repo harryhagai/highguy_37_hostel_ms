@@ -103,13 +103,55 @@ $publicHostelsForModal = array_values(array_map(
                     <p class="hero-description mb-4">
                         Compare hostels, view key details, and start booking with confidence from one clean student-friendly platform.
                     </p>
+                    <div class="hero-media-wrap d-lg-none mb-3">
+                        <div class="hero-media-card">
+                            <img
+                                src="<?= htmlspecialchars($heroImages[0]) ?>"
+                                alt="Student hostel view"
+                                class="hero-media-image"
+                                data-hero-images='<?= htmlspecialchars(json_encode($heroImages, JSON_UNESCAPED_SLASHES)) ?>'
+                                data-hero-interval="3000"
+                            >
+                        </div>
+                        <div class="hero-stat-card">
+                            <span class="hero-stat-icon">
+                                <i class="bi bi-check2-circle"></i>
+                            </span>
+                            <div>
+                                <p class="hero-stat-title mb-0">Verified Listings</p>
+                                <small class="hero-stat-subtitle">Availability updated regularly</small>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#hostels" class="hero-scroll-indicator hero-scroll-indicator-inline d-lg-none mb-2" aria-label="Scroll down to available hostels">
+                        <span>Scroll Down</span>
+                        <i class="bi bi-chevron-double-down" aria-hidden="true"></i>
+                    </a>
                     <div class="hero-actions d-flex flex-wrap gap-3">
                         <a href="auth/register.php" class="btn btn-hero-primary">
                             <i class="bi bi-rocket-takeoff me-2"></i>Get Started
                         </a>
-                        <a href="#about" class="btn btn-hero-secondary">
-                            <i class="bi bi-info-circle me-2"></i>Learn More
+                        <a href="hostels.php" class="btn btn-hero-secondary btn-hero-find">
+                            <i class="bi bi-buildings me-2"></i>Find Hostel
                         </a>
+                    </div>
+                    <div class="hero-system-stats mt-4" aria-label="System availability snapshot">
+                        <article class="hero-system-stat">
+                            <p class="hero-system-stat-label mb-1">Total Hostels In System</p>
+                            <h5 class="hero-system-stat-value mb-0"><?= (int)($publicHostelStats['total_hostels'] ?? 0) ?></h5>
+                        </article>
+                        <article class="hero-system-stat">
+                            <p class="hero-system-stat-label mb-1">Locations</p>
+                            <h5 class="hero-system-stat-value mb-0"><?= (int)($publicHostelStats['locations'] ?? 0) ?></h5>
+                        </article>
+                        <article class="hero-system-stat">
+                            <p class="hero-system-stat-label mb-1">Free Rooms</p>
+                            <h5 class="hero-system-stat-value mb-0"><?= (int)($publicHostelStats['free_rooms'] ?? 0) ?></h5>
+                        </article>
+                        <article class="hero-system-stat">
+                            <p class="hero-system-stat-label mb-1">Free Beds</p>
+                            <h5 class="hero-system-stat-value mb-0"><?= (int)($publicHostelStats['free_beds'] ?? 0) ?></h5>
+                        </article>
                     </div>
                 </div>
 
@@ -137,6 +179,10 @@ $publicHostelsForModal = array_values(array_map(
                 </div>
             </div>
         </div>
+        <a href="#hostels" class="hero-scroll-indicator d-none d-lg-inline-flex" aria-label="Scroll down to available hostels">
+            <span>Scroll Down</span>
+            <i class="bi bi-chevron-double-down" aria-hidden="true"></i>
+        </a>
     </section>
 
     <!-- About Us Section -->

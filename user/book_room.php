@@ -9,8 +9,11 @@ $hostel = $state['hostel'];
 $rooms = $state['rooms'];
 $existingBooking = $state['existing_booking'];
 $bookingMode = $state['booking_mode'];
-$selectedStartDate = $state['selected_start_date'];
-$selectedEndDate = $state['selected_end_date'];
+$semesterOptions = is_array($state['semester_options'] ?? null) ? $state['semester_options'] : [];
+$defaultSemesterId = (int)($state['default_semester_id'] ?? 0);
+$userPhone = trim((string)($state['user_phone'] ?? ''));
+$semesterReady = (bool)($state['semester_ready'] ?? true);
+$canSubmitBooking = !$existingBooking && $semesterReady && !empty($semesterOptions);
 ?>
 <div class="container-fluid px-0 user-book-room-page">
     <?php if (!empty($errors)): ?>
@@ -92,12 +95,12 @@ $selectedEndDate = $state['selected_end_date'];
                                 <?php if (!empty($availableBeds)): ?>
                                     Beds: <?= htmlspecialchars(implode(', ', array_map(static fn($bed) => (string)($bed['bed_number'] ?? ''), $availableBeds))) ?>
                                 <?php else: ?>
-                                    No available beds for selected dates.
+                                    No available beds for the current booking period.
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
 
-                        <?php if (!$existingBooking && !$isFull): ?>
+                        <?php if ($canSubmitBooking && !$isFull): ?>
                             <button
                                 type="button"
                                 class="btn btn-outline-primary w-100 book-room-btn"
@@ -105,7 +108,7 @@ $selectedEndDate = $state['selected_end_date'];
                                 data-bs-target="#bookRoomModal"
                                 data-room-id="<?= (int)$room['id'] ?>"
                                 data-room-number="<?= htmlspecialchars((string)$room['room_number']) ?>"
-                                data-room-price="<?= number_format((float)$room['price'], 2) ?>"
+                                data-room-price="<?= number_format((float)$room['price'], 2, '.', '') ?>"
                                 data-booking-mode="<?= htmlspecialchars((string)$bookingMode) ?>"
                                 data-available-beds='<?= htmlspecialchars(json_encode($availableBeds), ENT_QUOTES, 'UTF-8') ?>'>
                                 <i class="bi bi-calendar-plus me-1"></i>
@@ -116,9 +119,15 @@ $selectedEndDate = $state['selected_end_date'];
                                 <i class="bi bi-lock me-1"></i>Already Booked
                             </button>
                         <?php else: ?>
-                            <button class="btn btn-secondary w-100" disabled>
-                                <i class="bi bi-x-circle me-1"></i><?= $bookingMode === 'bed' ? 'No Bed Available' : 'Room Full' ?>
-                            </button>
+                            <?php if (!$semesterReady || empty($semesterOptions)): ?>
+                                <button class="btn btn-secondary w-100" disabled>
+                                    <i class="bi bi-sliders me-1"></i>Semester Settings Required
+                                </button>
+                            <?php else: ?>
+                                <button class="btn btn-secondary w-100" disabled>
+                                    <i class="bi bi-x-circle me-1"></i><?= $bookingMode === 'bed' ? 'No Bed Available' : 'Room Full' ?>
+                                </button>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
@@ -140,7 +149,7 @@ $selectedEndDate = $state['selected_end_date'];
                             <input type="text" class="form-control" id="modalRoomNumber" readonly>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Price</label>
+                            <label class="form-label">Room Monthly Price</label>
                             <input type="text" class="form-control" id="modalRoomPrice" readonly>
                         </div>
                         <div class="mb-2" id="modalBedSelectWrap">
@@ -151,19 +160,42 @@ $selectedEndDate = $state['selected_end_date'];
                             <small class="text-muted">Choose the bed you want to book in this room.</small>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" name="phone" id="phone" placeholder="Enter phone number">
+                            <label class="form-label">Your Phone Number</label>
+                            <input type="text" class="form-control" value="<?= htmlspecialchars($userPhone !== '' ? $userPhone : '-') ?>" readonly>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Semester</label>
+                            <select class="form-select" name="semester_id" id="modalSemesterId" required>
+                                <option value="">Select semester</option>
+                                <?php foreach ($semesterOptions as $semester): ?>
+                                    <option
+                                        value="<?= (int)$semester['id'] ?>"
+                                        data-start-date="<?= htmlspecialchars((string)$semester['start_date']) ?>"
+                                        data-end-date="<?= htmlspecialchars((string)$semester['end_date']) ?>"
+                                        data-months="<?= (int)$semester['months'] ?>"
+                                        <?= (int)$semester['id'] === $defaultSemesterId ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars((string)$semester['name']) ?> (<?= (int)$semester['months'] ?> months)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Semester Period</label>
+                            <input type="text" class="form-control" id="modalSemesterPeriod" readonly>
                         </div>
                         <div class="row g-2">
                             <div class="col-sm-6">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" class="form-control" name="start_date" value="<?= htmlspecialchars((string)$selectedStartDate) ?>">
+                                <label class="form-label">Months</label>
+                                <input type="text" class="form-control" id="modalSemesterMonths" readonly>
                             </div>
                             <div class="col-sm-6">
-                                <label class="form-label">End Date</label>
-                                <input type="date" class="form-control" name="end_date" value="<?= htmlspecialchars((string)$selectedEndDate) ?>">
+                                <label class="form-label">Total Price</label>
+                                <input type="text" class="form-control" id="modalTotalPrice" readonly>
                             </div>
                         </div>
+                        <small class="text-muted d-block mt-2">
+                            After confirming, you will be redirected to Payment Verification to submit your Transaction ID.
+                        </small>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-outline-primary">Confirm Booking</button>

@@ -2,7 +2,7 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../../includes/user_helpers.php';
 
 $hostels = user_fetch_hostel_cards($pdo, true);
 $currentUserGender = '';
@@ -38,6 +38,78 @@ $hostels = array_values(array_filter(
     }
 ));
 
+$roomMetaByHostel = [];
+if (user_table_exists($pdo, 'rooms')) {
+    $roomHasType = user_column_exists($pdo, 'rooms', 'room_type');
+    $roomHasPrice = user_column_exists($pdo, 'rooms', 'price');
+    $roomHasAvailable = user_column_exists($pdo, 'rooms', 'available');
+    $roomHasCapacity = user_column_exists($pdo, 'rooms', 'capacity');
+    $roomHasBedCapacity = user_column_exists($pdo, 'rooms', 'bed_capacity');
+
+    $roomSelect = [
+        'r.id',
+        'r.hostel_id',
+        'r.room_number',
+        $roomHasType ? 'r.room_type' : "'' AS room_type",
+        $roomHasPrice ? 'r.price' : 'NULL AS price',
+        $roomHasAvailable ? 'r.available' : 'NULL AS available',
+        $roomHasCapacity ? 'r.capacity' : 'NULL AS capacity',
+        $roomHasBedCapacity ? 'r.bed_capacity' : 'NULL AS bed_capacity',
+    ];
+
+    $roomRows = $pdo->query(
+        'SELECT ' . implode(', ', $roomSelect) . '
+         FROM rooms r
+         ORDER BY r.hostel_id ASC, r.room_number ASC, r.id ASC'
+    )->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($roomRows as $roomRow) {
+        $hostelId = (int)($roomRow['hostel_id'] ?? 0);
+        if ($hostelId <= 0) {
+            continue;
+        }
+
+        if (!isset($roomMetaByHostel[$hostelId])) {
+            $roomMetaByHostel[$hostelId] = [
+                'priced_rooms' => 0,
+                'price_min' => null,
+                'price_max' => null,
+                'rooms' => [],
+            ];
+        }
+
+        $spotsLabel = '-';
+        if ($roomHasAvailable) {
+            $spotsLabel = max(0, (int)($roomRow['available'] ?? 0)) . ' spots left';
+        } elseif ($roomHasCapacity) {
+            $spotsLabel = 'Capacity ' . max(0, (int)($roomRow['capacity'] ?? 0));
+        } elseif ($roomHasBedCapacity) {
+            $spotsLabel = 'Capacity ' . max(0, (int)($roomRow['bed_capacity'] ?? 0));
+        }
+
+        $priceValue = null;
+        if ($roomHasPrice && isset($roomRow['price']) && $roomRow['price'] !== null && is_numeric($roomRow['price'])) {
+            $priceValue = max(0, (float)$roomRow['price']);
+            $roomMetaByHostel[$hostelId]['priced_rooms']++;
+
+            if ($roomMetaByHostel[$hostelId]['price_min'] === null || $priceValue < (float)$roomMetaByHostel[$hostelId]['price_min']) {
+                $roomMetaByHostel[$hostelId]['price_min'] = $priceValue;
+            }
+            if ($roomMetaByHostel[$hostelId]['price_max'] === null || $priceValue > (float)$roomMetaByHostel[$hostelId]['price_max']) {
+                $roomMetaByHostel[$hostelId]['price_max'] = $priceValue;
+            }
+        }
+
+        $roomMetaByHostel[$hostelId]['rooms'][] = [
+            'room_number' => (string)($roomRow['room_number'] ?? '-'),
+            'room_type' => trim((string)($roomRow['room_type'] ?? '')),
+            'price' => $priceValue,
+            'price_label' => $priceValue !== null ? ('TSh ' . number_format($priceValue, 2)) : 'Price not set',
+            'spots_label' => $spotsLabel,
+        ];
+    }
+}
+
 $totalRooms = 0;
 $totalFreeRooms = 0;
 $locationMap = [];
@@ -66,6 +138,34 @@ foreach ($hostels as &$hostel) {
 
     $gender = user_normalize_gender((string)($hostel['gender'] ?? 'all'));
     $genderMap[$gender] = user_gender_label($gender);
+
+    $hostelId = (int)($hostel['id'] ?? 0);
+    $roomMeta = $roomMetaByHostel[$hostelId] ?? null;
+    $hostel['priced_rooms'] = 0;
+    $hostel['room_price_min'] = null;
+    $hostel['room_price_max'] = null;
+    $hostel['room_price_min_label'] = '-';
+    $hostel['room_price_max_label'] = '-';
+    $hostel['room_price_summary'] = 'Price not set';
+    $hostel['room_pricing_preview'] = [];
+
+    if (is_array($roomMeta)) {
+        $hostel['priced_rooms'] = (int)($roomMeta['priced_rooms'] ?? 0);
+        $hostel['room_price_min'] = $roomMeta['price_min'];
+        $hostel['room_price_max'] = $roomMeta['price_max'];
+        $hostel['room_pricing_preview'] = array_slice((array)($roomMeta['rooms'] ?? []), 0, 10);
+
+        if ($hostel['room_price_min'] !== null) {
+            $hostel['room_price_min_label'] = 'TSh ' . number_format((float)$hostel['room_price_min'], 2);
+            $hostel['room_price_max_label'] = 'TSh ' . number_format((float)$hostel['room_price_max'], 2);
+
+            if ((float)$hostel['room_price_min'] === (float)$hostel['room_price_max']) {
+                $hostel['room_price_summary'] = $hostel['room_price_min_label'];
+            } else {
+                $hostel['room_price_summary'] = $hostel['room_price_min_label'] . ' - ' . $hostel['room_price_max_label'];
+            }
+        }
+    }
 }
 unset($hostel);
 

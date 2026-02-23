@@ -7,6 +7,84 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.user-stats-grid .stat-card {
+    min-height: 100%;
+}
+
+.student-name-highlight {
+    color: #0f766e;
+    font-weight: 800;
+}
+
+.dashboard-section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.68rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.dashboard-section-title-bookings {
+    color: #1d4ed8;
+    background: rgba(59, 130, 246, 0.14);
+    border: 1px solid rgba(59, 130, 246, 0.24);
+}
+
+.dashboard-section-title-announcement {
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.announcement-count-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 1px solid #e2e8f0;
+}
+
+.announcement-scroll-list {
+    max-height: 345px;
+    overflow: auto;
+    padding-right: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.announcement-item {
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #f59e0b;
+    border-radius: 11px;
+    padding: 0.65rem 0.75rem;
+    background: #fffdf7;
+}
+
+.stat-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.stat-card-link:hover,
+.stat-card-link:focus {
+    color: inherit;
+}
+
+.dashboard-help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.65rem;
+}
+
+.dashboard-help-grid .btn {
+    width: 100%;
+    text-align: left;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
 .student-hostel-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -99,7 +177,7 @@
 
 .student-room-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.95rem;
 }
 
@@ -107,8 +185,9 @@
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 1rem;
+    padding: clamp(0.72rem, 0.9vw, 1rem);
     box-shadow: 0 8px 20px rgba(2, 6, 23, 0.04);
+    font-size: clamp(0.84rem, 0.35vw + 0.72rem, 0.98rem);
 }
 
 .student-room-media {
@@ -117,7 +196,7 @@
 
 .student-room-thumb {
     width: 100%;
-    height: 160px;
+    height: clamp(120px, 12vw, 170px);
     object-fit: cover;
     border-radius: 10px;
     display: block;
@@ -131,8 +210,14 @@
     gap: 0.7rem;
 }
 
+.student-room-head h5,
+.student-bed-body h5 {
+    font-size: clamp(0.98rem, 0.38vw + 0.8rem, 1.28rem);
+    line-height: 1.15;
+}
+
 .room-price {
-    font-size: 1.03rem;
+    font-size: clamp(0.92rem, 0.35vw + 0.76rem, 1.1rem);
     font-weight: 700;
     color: #0369a1;
 }
@@ -300,8 +385,36 @@
 
 .student-bed-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.95rem;
+}
+
+@media (min-width: 700px) {
+    .student-bed-grid,
+    .student-room-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1100px) {
+    .student-bed-grid,
+    .student-room-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1500px) {
+    .student-bed-grid,
+    .student-room-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1900px) {
+    .student-bed-grid,
+    .student-room-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
 }
 
 .student-bed-card {
@@ -319,15 +432,54 @@
 }
 
 .student-bed-body {
-    padding: 0.95rem;
+    padding: clamp(0.72rem, 0.9vw, 0.95rem);
     display: flex;
     flex-direction: column;
     height: 100%;
+    font-size: clamp(0.84rem, 0.35vw + 0.72rem, 0.98rem);
 }
 
 .user-book-bed-page .dashboard-card {
     border: 1px solid #e2e8f0;
     border-radius: 14px;
+}
+
+.user-notices-page .dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.user-notice-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.user-notice-card {
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #f59e0b;
+    border-radius: 12px;
+    background: #fff;
+    padding: 0.9rem;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.04);
+}
+
+.hostel-detail-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+}
+
+.hostel-detail-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.55rem 0.65rem;
+    background: #f8fbff;
+}
+
+.hostel-booking-flow-note {
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1e3a8a;
 }
 
 @media (max-width: 991.98px) {
@@ -337,14 +489,105 @@
 }
 
 @media (max-width: 600px) {
-    .user-stats-grid {
+    .user-hero-card .dashboard-intro-right {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem !important;
+    }
+
+    .user-hero-card .dashboard-intro-right .btn {
+        width: 100%;
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding-left: 0.45rem;
+        padding-right: 0.45rem;
+        font-size: 0.8rem;
+    }
+
+    .user-hero-card .dashboard-intro-right .btn i {
+        margin-right: 0.3rem !important;
+    }
+
+    .announcement-scroll-list {
+        max-height: 290px;
+    }
+
+    .hostel-detail-meta {
         grid-template-columns: 1fr;
     }
 
-    .student-hostel-grid,
-    .student-bed-grid,
     .student-room-grid,
+    .student-bed-grid {
+        gap: 0.62rem;
+    }
+
+    .student-room-card {
+        padding: 0.62rem;
+        border-radius: 10px;
+        font-size: 0.83rem;
+    }
+
+    .student-bed-card {
+        border-radius: 10px;
+        font-size: 0.83rem;
+    }
+
+    .student-bed-body {
+        padding: 0.62rem;
+    }
+
+    .student-room-thumb {
+        height: 118px;
+        border-radius: 9px;
+    }
+
+    .student-room-head {
+        gap: 0.38rem;
+        align-items: flex-start;
+    }
+
+    .student-room-head h5,
+    .student-bed-body h5 {
+        font-size: 0.92rem;
+    }
+
+    .room-price {
+        font-size: 0.92rem;
+        margin-bottom: 0.55rem !important;
+    }
+
+    .student-room-card .badge,
+    .student-bed-card .badge {
+        font-size: 0.69rem;
+        padding: 0.24rem 0.4rem;
+    }
+
+    .student-room-card .btn,
+    .student-bed-card .btn {
+        font-size: 0.8rem;
+        padding: 0.38rem 0.32rem;
+        line-height: 1.2;
+    }
+
+    .user-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .student-hostel-grid,
     .student-booking-grid {
         grid-template-columns: 1fr;
+    }
+
+    .dashboard-help-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-help-grid .btn {
+        font-size: 0.84rem;
+        padding-left: 0.55rem;
+        padding-right: 0.55rem;
     }
 }

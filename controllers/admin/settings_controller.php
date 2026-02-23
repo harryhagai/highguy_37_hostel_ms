@@ -2,7 +2,7 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
-require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
+require_once __DIR__ . '/../../includes/admin_post_guard.php';
 
 $errors = [];
 $success = '';
@@ -114,8 +114,9 @@ if (!$profile) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = trim((string)($_POST['action'] ?? ''));
+    $handledAction = in_array($action, ['update_account', 'update_password', 'update_photo'], true);
 
-    if ($action === 'update_account') {
+    if ($handledAction && $action === 'update_account') {
         $username = trim((string)($_POST['username'] ?? ''));
         $email = trim((string)($_POST['email'] ?? ''));
         $phone = trim((string)($_POST['phone'] ?? ''));
@@ -164,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'update_password') {
+    if ($handledAction && $action === 'update_password') {
         $currentPassword = (string)($_POST['current_password'] ?? '');
         $newPassword = (string)($_POST['new_password'] ?? '');
         $confirmPassword = (string)($_POST['confirm_password'] ?? '');
@@ -199,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'update_photo') {
+    if ($handledAction && $action === 'update_photo') {
         if (!$hasProfilePhotoColumn) {
             $errors[] = 'Profile photo is not supported in this database.';
         } else {
@@ -252,12 +253,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    admin_prg_redirect('settings', [
-        'errors' => $errors,
-        'success' => $success,
-    ]);
+    if ($handledAction) {
+        admin_prg_redirect('settings', [
+            'errors' => $errors,
+            'success' => $success,
+        ]);
 
-    $profile = $fetchAdminProfile($pdo, $adminId, $hasPhoneColumn, $hasProfilePhotoColumn);
+        $profile = $fetchAdminProfile($pdo, $adminId, $hasPhoneColumn, $hasProfilePhotoColumn);
+    }
 }
 
 return [

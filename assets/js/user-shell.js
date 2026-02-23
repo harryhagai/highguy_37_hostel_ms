@@ -3,6 +3,7 @@
     var toggleBtn = document.getElementById('sidebarToggle');
     var toggleIcon = toggleBtn ? toggleBtn.querySelector('i') : null;
     var backdrop = document.getElementById('sidebarBackdrop');
+    var sidebar = document.getElementById('sidebar');
 
     if (!body || !toggleBtn) return;
 
@@ -13,9 +14,7 @@
         if (!toggleIcon) return;
 
         if (mobileQuery.matches) {
-            toggleIcon.className = body.classList.contains('sidebar-open')
-                ? 'bi bi-chevron-left'
-                : 'bi bi-chevron-right';
+            toggleIcon.className = 'bi bi-list';
             return;
         }
 
@@ -73,6 +72,14 @@
 
     if (backdrop) {
         backdrop.addEventListener('click', closeMobileSidebar);
+    }
+
+    if (sidebar) {
+        sidebar.addEventListener('click', function (event) {
+            var link = event.target.closest('a');
+            if (!link || !mobileQuery.matches) return;
+            closeMobileSidebar();
+        });
     }
 
     document.addEventListener('keydown', function (event) {

@@ -2,7 +2,7 @@
 ob_start();
 session_start();
 require_once __DIR__ . '/../config/db_connection.php';
-require_once __DIR__ . '/includes/admin_post_guard.php';
+require_once __DIR__ . '/../includes/admin_post_guard.php';
 require_once __DIR__ . '/../permission/role_permission.php';
 rp_require_roles(['admin'], '../auth/login.php');
 
@@ -15,6 +15,109 @@ if ($displayUsername === '') {
     $displayUsername = ucwords(strtolower($displayUsername));
 }
 $profile_pic = isset($_SESSION['profile_pic']) ? $_SESSION['profile_pic'] : '../assets/images/prof.jpg';
+
+$adminTableExists = static function (PDO $db, string $table): bool {
+    static $cache = [];
+    if (array_key_exists($table, $cache)) {
+        return $cache[$table];
+    }
+
+    $stmt = $db->prepare(
+        'SELECT COUNT(*)
+         FROM information_schema.TABLES
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?'
+    );
+    $stmt->execute([$table]);
+    $cache[$table] = (int)$stmt->fetchColumn() > 0;
+    return $cache[$table];
+};
+
+$adminColumnExists = static function (PDO $db, string $table, string $column) use ($adminTableExists): bool {
+    static $cache = [];
+    $cacheKey = $table . '.' . $column;
+    if (array_key_exists($cacheKey, $cache)) {
+        return $cache[$cacheKey];
+    }
+    if (!$adminTableExists($db, $table)) {
+        $cache[$cacheKey] = false;
+        return false;
+    }
+
+    $stmt = $db->prepare(
+        'SELECT COUNT(*)
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+    );
+    $stmt->execute([$table, $column]);
+    $cache[$cacheKey] = (int)$stmt->fetchColumn() > 0;
+    return $cache[$cacheKey];
+};
+
+$adminNotifications = [];
+$adminNotificationCount = 0;
+
+if ($adminTableExists($pdo, 'bookings') && $adminColumnExists($pdo, 'bookings', 'status')) {
+    $pendingBookings = (int)$pdo->query("SELECT COUNT(*) FROM bookings WHERE status = 'pending'")->fetchColumn();
+    if ($pendingBookings > 0) {
+        $adminNotifications[] = [
+            'icon' => 'bi bi-clipboard-check',
+            'tone' => 'warning',
+            'title' => $pendingBookings . ' pending booking request' . ($pendingBookings === 1 ? '' : 's'),
+            'message' => 'Applications are waiting for admin review.',
+            'page' => 'application_management',
+        ];
+        $adminNotificationCount += $pendingBookings;
+    }
+
+    if ($adminColumnExists($pdo, 'bookings', 'booking_date')) {
+        $bookingsToday = (int)$pdo->query('SELECT COUNT(*) FROM bookings WHERE DATE(booking_date) = CURDATE()')->fetchColumn();
+        if ($bookingsToday > 0) {
+            $adminNotifications[] = [
+                'icon' => 'bi bi-calendar-event',
+                'tone' => 'info',
+                'title' => $bookingsToday . ' booking' . ($bookingsToday === 1 ? '' : 's') . ' created today',
+                'message' => 'New activity recorded in today\'s booking cycle.',
+                'page' => 'application_management',
+            ];
+            $adminNotificationCount += $bookingsToday;
+        }
+    }
+}
+
+if ($adminTableExists($pdo, 'beds') && $adminColumnExists($pdo, 'beds', 'status')) {
+    $maintenanceBeds = (int)$pdo->query("SELECT COUNT(*) FROM beds WHERE status = 'maintenance'")->fetchColumn();
+    if ($maintenanceBeds > 0) {
+        $adminNotifications[] = [
+            'icon' => 'bi bi-tools',
+            'tone' => 'danger',
+            'title' => $maintenanceBeds . ' bed' . ($maintenanceBeds === 1 ? '' : 's') . ' in maintenance',
+            'message' => 'Review maintenance beds and return active ones when ready.',
+            'page' => 'manage_beds',
+        ];
+        $adminNotificationCount += $maintenanceBeds;
+    }
+}
+
+if ($adminTableExists($pdo, 'notices')) {
+    $noticeCountQuery = $adminColumnExists($pdo, 'notices', 'created_at')
+        ? "SELECT COUNT(*) FROM notices WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
+        : "SELECT COUNT(*) FROM notices";
+    $recentNotices = (int)$pdo->query($noticeCountQuery)->fetchColumn();
+    if ($recentNotices > 0) {
+        $adminNotifications[] = [
+            'icon' => 'bi bi-megaphone',
+            'tone' => 'success',
+            'title' => $recentNotices . ' recent notice' . ($recentNotices === 1 ? '' : 's'),
+            'message' => 'Recent notices were posted in the last 7 days.',
+            'page' => 'notice',
+        ];
+        $adminNotificationCount += $recentNotices;
+    }
+}
+
+$adminNotifications = array_slice($adminNotifications, 0, 5);
+$adminNotificationBadge = $adminNotificationCount > 99 ? '99+' : (string)$adminNotificationCount;
+$hasAdminNotifications = !empty($adminNotifications) && $adminNotificationCount > 0;
 
 // --- PAGE ROUTING ---
 $allowed = [
@@ -29,6 +132,10 @@ $allowed = [
 ];
 
 $page = isset($_GET['page']) ? (string)$_GET['page'] : 'dashboard';
+if ($page === 'payment_settings') {
+    $_GET['settings_tab'] = 'payment';
+    $page = 'settings';
+}
 $isSpaRequest = isset($_GET['spa']) && $_GET['spa'] === '1';
 
 function renderAdminPageContent(string $page, array $allowed): void
@@ -75,7 +182,7 @@ if ($isSpaRequest) {
             <i class="bi bi-chevron-left"></i>
         </button>
         <div class="header-title">
-            <i class="bi bi-house-door-fill"></i> HostelPro Admin Dashboard
+            HostelPro Admin Dashboard
         </div>
     </div>
     <div class="header-search" role="search" aria-label="Dashboard quick search">
@@ -84,16 +191,49 @@ if ($isSpaRequest) {
     </div>
     <div class="header-tools">
         <div class="dropdown icon-dropdown">
-            <button type="button" class="icon-btn" data-bs-toggle="dropdown" aria-expanded="false" data-no-spinner="true" aria-label="Notifications">
+            <button type="button" class="icon-btn notification-btn" data-bs-toggle="dropdown" aria-expanded="false" data-no-spinner="true" aria-label="Notifications">
                 <i class="bi bi-bell"></i>
-                <span class="icon-badge">3</span>
+                <span class="icon-badge <?= $hasAdminNotifications ? '' : 'd-none' ?>"><?= htmlspecialchars($adminNotificationBadge, ENT_QUOTES, 'UTF-8') ?></span>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><h6 class="dropdown-header">Notifications</h6></li>
-                <li><span class="dropdown-item-text">2 new booking requests</span></li>
-                <li><span class="dropdown-item-text">1 room marked maintenance</span></li>
+            <ul class="dropdown-menu dropdown-menu-end notification-menu">
+                <li>
+                    <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                        <span>Notifications</span>
+                        <span class="badge text-bg-light"><?= htmlspecialchars($adminNotificationBadge, ENT_QUOTES, 'UTF-8') ?></span>
+                    </h6>
+                </li>
+                <?php if ($hasAdminNotifications): ?>
+                    <?php foreach ($adminNotifications as $notification): ?>
+                        <?php
+                        $notificationPage = (string)($notification['page'] ?? 'dashboard');
+                        $notificationHref = 'admin_dashboard_layout.php?page=' . rawurlencode($notificationPage);
+                        $notificationIcon = (string)($notification['icon'] ?? 'bi bi-info-circle');
+                        $notificationTone = (string)($notification['tone'] ?? 'info');
+                        $notificationTitle = (string)($notification['title'] ?? 'Notification');
+                        $notificationMessage = (string)($notification['message'] ?? '');
+                        ?>
+                        <li>
+                            <a
+                                class="dropdown-item notification-item"
+                                href="<?= htmlspecialchars($notificationHref, ENT_QUOTES, 'UTF-8') ?>"
+                                data-spa-page="<?= htmlspecialchars($notificationPage, ENT_QUOTES, 'UTF-8') ?>"
+                                data-no-spinner="true"
+                            >
+                                <span class="notification-item-icon notification-tone-<?= htmlspecialchars($notificationTone, ENT_QUOTES, 'UTF-8') ?>">
+                                    <i class="<?= htmlspecialchars($notificationIcon, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                </span>
+                                <span class="notification-item-copy">
+                                    <strong><?= htmlspecialchars($notificationTitle, ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <small><?= htmlspecialchars($notificationMessage, ENT_QUOTES, 'UTF-8') ?></small>
+                                </span>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <li><span class="dropdown-item-text text-muted">No new notifications right now.</span></li>
+                <?php endif; ?>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=notice" data-spa-page="notice" data-no-spinner="true">View notices</a></li>
+                <li><a class="dropdown-item notification-view-all" href="admin_dashboard_layout.php?page=notice" data-spa-page="notice" data-no-spinner="true">Open notice center</a></li>
             </ul>
         </div>
         <div class="dropdown icon-dropdown">
@@ -105,6 +245,7 @@ if ($isSpaRequest) {
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=manage_users" data-spa-page="manage_users" data-no-spinner="true">Manage users</a></li>
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=manage_rooms" data-spa-page="manage_rooms" data-no-spinner="true">Manage rooms</a></li>
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=manage_beds" data-spa-page="manage_beds" data-no-spinner="true">Manage beds</a></li>
+                <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=settings&settings_tab=payment" data-spa-page="settings" data-spa-query="settings_tab=payment" data-no-spinner="true">Payment settings</a></li>
             </ul>
         </div>
         <div class="user-menu dropdown">

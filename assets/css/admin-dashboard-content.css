@@ -22,6 +22,99 @@
     color: #0f766e;
 }
 
+.admin-dashboard-page .dashboard-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #f6fbff 52%, #ecfdf8 100%);
+    border: 1px solid #e2e8f0;
+}
+
+.dashboard-intro-left {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.dashboard-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.36rem 0.7rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.hero-pill i {
+    color: #0f766e;
+}
+
+.hero-pill-live {
+    background: rgba(20, 184, 166, 0.12);
+    border-color: rgba(20, 184, 166, 0.28);
+    color: #0f766e;
+}
+
+.dashboard-highlight-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.highlight-card {
+    border: 1px solid #e2e8f0;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.highlight-label {
+    color: #64748b;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+
+.highlight-value {
+    margin: 0;
+    font-size: 1.65rem;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.highlight-rate {
+    color: #0f766e;
+    font-size: 1.05rem;
+}
+
+.highlight-copy {
+    color: #475569;
+    font-size: 0.86rem;
+}
+
+.occupancy-progress {
+    height: 0.6rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.occupancy-progress .progress-bar {
+    border-radius: 999px;
+    background: linear-gradient(90deg, #14b8a6 0%, #0ea5e9 100%);
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -101,8 +194,20 @@
 
 .dashboard-analytics-grid {
     display: grid;
-    grid-template-columns: 1.7fr 1fr;
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
     gap: 0.9rem;
+}
+
+.dashboard-side-column {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.chart-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
 }
 
 .chart-card h5 {
@@ -110,8 +215,52 @@
     font-weight: 700;
 }
 
+.chart-card-main {
+    min-height: 390px;
+}
+
+.chart-subtitle {
+    color: #64748b;
+    font-size: 0.84rem;
+}
+
 .chart-card h5 i {
     color: #14b8a6;
+}
+
+.chart-meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.chart-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.32rem 0.68rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.chart-meta-app {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.22);
+    color: #1d4ed8;
+}
+
+.chart-meta-ok {
+    background: rgba(20, 184, 166, 0.12);
+    border-color: rgba(20, 184, 166, 0.24);
+    color: #0f766e;
+}
+
+.chart-meta-no {
+    background: rgba(239, 68, 68, 0.11);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #b91c1c;
 }
 
 .summary-title {
@@ -133,6 +282,57 @@
 
 #adminDashboardChart {
     margin-top: 0.35rem;
+    width: 100% !important;
+    min-height: 290px;
+}
+
+.split-chart-card {
+    position: relative;
+    min-height: 352px;
+}
+
+#adminBookingSplitChart {
+    width: 100% !important;
+    max-height: 220px;
+    min-height: 220px;
+}
+
+.split-chart-legend {
+    display: grid;
+    gap: 0.42rem;
+}
+
+.split-legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: #334155;
+    font-size: 0.84rem;
+}
+
+.split-legend-item .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    margin-right: 0.45rem;
+    display: inline-block;
+}
+
+.split-legend-item strong {
+    margin-left: auto;
+}
+
+.dot-pending {
+    background: #f59e0b;
+}
+
+.dot-confirmed {
+    background: #0ea5a5;
+}
+
+.dot-cancelled {
+    background: #ef4444;
 }
 
 .users-shell {
@@ -428,7 +628,8 @@ body .modal-backdrop {
 }
 
 .rooms-page .users-modal .modal-dialog,
-.beds-page .users-modal .modal-dialog {
+.beds-page .users-modal .modal-dialog,
+.applications-page .users-modal .modal-dialog {
     --bs-modal-width: 700px;
 }
 
@@ -439,7 +640,8 @@ body .modal-backdrop {
 }
 
 .rooms-page .users-modal .modal-content,
-.beds-page .users-modal .modal-content {
+.beds-page .users-modal .modal-content,
+.applications-page .users-modal .modal-content {
     font-size: 0.9rem;
 }
 
@@ -448,32 +650,39 @@ body .modal-backdrop {
 .rooms-page .users-modal .modal-footer,
 .beds-page .users-modal .modal-header,
 .beds-page .users-modal .modal-body,
-.beds-page .users-modal .modal-footer {
+.beds-page .users-modal .modal-footer,
+.applications-page .users-modal .modal-header,
+.applications-page .users-modal .modal-body,
+.applications-page .users-modal .modal-footer {
     padding-left: 0.85rem;
     padding-right: 0.85rem;
 }
 
 .rooms-page .users-modal .modal-header,
-.beds-page .users-modal .modal-header {
+.beds-page .users-modal .modal-header,
+.applications-page .users-modal .modal-header {
     padding-top: 0.65rem;
     padding-bottom: 0.65rem;
 }
 
 .rooms-page .users-modal .modal-body,
-.beds-page .users-modal .modal-body {
+.beds-page .users-modal .modal-body,
+.applications-page .users-modal .modal-body {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
 }
 
 .rooms-page .users-modal .modal-footer,
-.beds-page .users-modal .modal-footer {
+.beds-page .users-modal .modal-footer,
+.applications-page .users-modal .modal-footer {
     padding-top: 0.55rem;
     padding-bottom: 0.55rem;
     gap: 0.45rem;
 }
 
 .rooms-page .users-modal .form-label,
-.beds-page .users-modal .form-label {
+.beds-page .users-modal .form-label,
+.applications-page .users-modal .form-label {
     font-size: 0.8rem;
     margin-bottom: 0.25rem;
 }
@@ -481,26 +690,31 @@ body .modal-backdrop {
 .rooms-page .users-modal .form-control,
 .rooms-page .users-modal .form-select,
 .beds-page .users-modal .form-control,
-.beds-page .users-modal .form-select {
+.beds-page .users-modal .form-select,
+.applications-page .users-modal .form-control,
+.applications-page .users-modal .form-select {
     font-size: 0.86rem;
     padding-top: 0.36rem;
     padding-bottom: 0.36rem;
 }
 
 .rooms-page .users-modal .row.g-3,
-.beds-page .users-modal .row.g-3 {
+.beds-page .users-modal .row.g-3,
+.applications-page .users-modal .row.g-3 {
     --bs-gutter-x: 0.75rem;
     --bs-gutter-y: 0.62rem;
 }
 
 .rooms-page .users-modal .border.rounded-3,
-.beds-page .users-modal .border.rounded-3 {
+.beds-page .users-modal .border.rounded-3,
+.applications-page .users-modal .border.rounded-3 {
     padding: 0.75rem !important;
     height: auto !important;
 }
 
 .rooms-page .users-modal h6,
-.beds-page .users-modal h6 {
+.beds-page .users-modal h6,
+.applications-page .users-modal h6 {
     font-size: 0.86rem;
     margin-bottom: 0.55rem !important;
 }
@@ -541,7 +755,16 @@ body .modal-backdrop {
     white-space: nowrap;
 }
 
+.applications-page #applicationsTable .application-actions-cell {
+    min-width: 260px;
+    white-space: nowrap;
+}
+
 .notices-page #noticesTable .notice-actions-cell .btn {
+    white-space: nowrap;
+}
+
+.applications-page #applicationsTable .application-actions-cell .btn {
     white-space: nowrap;
 }
 
@@ -561,6 +784,22 @@ body .modal-backdrop {
     font-weight: 600;
     color: #334155;
     font-size: 0.88rem;
+}
+
+.settings-page .settings-actions-cell {
+    min-width: 220px;
+    white-space: nowrap;
+}
+
+.settings-page .settings-action-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: nowrap;
+}
+
+.settings-page .settings-action-buttons .btn {
+    white-space: nowrap;
 }
 
 .hostels-page .hostel-preview-md {
@@ -674,14 +913,16 @@ body .modal-backdrop {
 .hostels-page .users-field-icon,
 .rooms-page .users-field-icon,
 .beds-page .users-field-icon,
-.notices-page .users-field-icon {
+.notices-page .users-field-icon,
+.applications-page .users-field-icon {
     position: relative;
 }
 
 .hostels-page .users-field-icon > i,
 .rooms-page .users-field-icon > i,
 .beds-page .users-field-icon > i,
-.notices-page .users-field-icon > i {
+.notices-page .users-field-icon > i,
+.applications-page .users-field-icon > i {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -699,21 +940,25 @@ body .modal-backdrop {
 .beds-page .users-field-icon .form-control,
 .beds-page .users-field-icon .form-select,
 .notices-page .users-field-icon .form-control,
-.notices-page .users-field-icon .form-select {
+.notices-page .users-field-icon .form-select,
+.applications-page .users-field-icon .form-control,
+.applications-page .users-field-icon .form-select {
     padding-left: 34px;
 }
 
 .hostels-page .users-field-search .form-control,
 .rooms-page .users-field-search .form-control,
 .beds-page .users-field-search .form-control,
-.notices-page .users-field-search .form-control {
+.notices-page .users-field-search .form-control,
+.applications-page .users-field-search .form-control {
     padding-right: 34px;
 }
 
 .hostels-page .users-field-clear,
 .rooms-page .users-field-clear,
 .beds-page .users-field-clear,
-.notices-page .users-field-clear {
+.notices-page .users-field-clear,
+.applications-page .users-field-clear {
     position: absolute;
     right: 10px;
     top: 50%;
@@ -729,12 +974,21 @@ body .modal-backdrop {
 .hostels-page .users-field-clear:hover,
 .rooms-page .users-field-clear:hover,
 .beds-page .users-field-clear:hover,
-.notices-page .users-field-clear:hover {
+.notices-page .users-field-clear:hover,
+.applications-page .users-field-clear:hover {
     color: #0f766e;
 }
 
 @media (max-width: 991.98px) {
+    .dashboard-highlight-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .dashboard-analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-side-column {
         grid-template-columns: 1fr;
     }
 
@@ -751,6 +1005,27 @@ body .modal-backdrop {
     }
 
     .dashboard-intro-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dashboard-hero-actions {
+        width: 100%;
+    }
+
+    .dashboard-hero-actions .btn {
+        width: 100%;
+    }
+
+    .dashboard-highlight-row {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-side-column {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card-head {
         flex-direction: column;
         align-items: flex-start;
     }

@@ -9,6 +9,15 @@
         return params.get('page') || 'dashboard';
     }
 
+    function getQueryParamsWithoutPage(source) {
+        var params = source instanceof URLSearchParams
+            ? new URLSearchParams(source.toString())
+            : new URLSearchParams(source || window.location.search);
+        params.delete('page');
+        params.delete('spa');
+        return params;
+    }
+
     function setActiveMenu(page) {
         document.querySelectorAll('.sidebar a[data-spa-page]').forEach(function (link) {
             link.classList.toggle('active', link.dataset.spaPage === page);
@@ -81,7 +90,7 @@
         );
     }
 
-    function loadPage(page, pushState) {
+    function loadPage(page, pushState, extraQuery) {
         if (!page) page = 'dashboard';
 
         if (currentController) {
@@ -92,17 +101,21 @@
         content.classList.add('is-loading');
         content.innerHTML = getSkeletonMarkup(page);
 
-        var requestParams = new URLSearchParams();
-        requestParams.set('spa', '1');
-        requestParams.set('page', page);
+        var pageParams = extraQuery instanceof URLSearchParams
+            ? new URLSearchParams(extraQuery.toString())
+            : new URLSearchParams(extraQuery || '');
+        pageParams.set('page', page);
 
-        if (page === 'book_room' || page === 'book_bed') {
+        if ((page === 'book_room' || page === 'book_bed') && !pageParams.get('hostel_id')) {
             var currentUrlParams = new URLSearchParams(window.location.search);
             var hostelId = currentUrlParams.get('hostel_id');
             if (hostelId) {
-                requestParams.set('hostel_id', hostelId);
+                pageParams.set('hostel_id', hostelId);
             }
         }
+
+        var requestParams = new URLSearchParams(pageParams.toString());
+        requestParams.set('spa', '1');
 
         fetch('user_dashboard_layout.php?' + requestParams.toString(), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -118,11 +131,11 @@
                 runPageHooks();
                 setActiveMenu(page);
                 content.dataset.currentPage = page;
+                content.dataset.currentQuery = getQueryParamsWithoutPage(pageParams).toString();
 
                 if (pushState) {
                     var url = new URL(window.location.href);
-                    url.searchParams.set('page', page);
-                    url.searchParams.delete('hostel_id');
+                    url.search = pageParams.toString();
                     window.history.pushState({ page: page }, '', url.toString());
                 }
             })
@@ -158,24 +171,25 @@
         var targetPage = link.dataset.spaPage || 'dashboard';
         event.preventDefault();
 
-        if ((targetPage === 'book_room' || targetPage === 'book_bed') && url.searchParams.get('hostel_id')) {
-            window.history.pushState({ page: targetPage }, '', url.toString());
-            loadPage(targetPage, false);
-            return;
-        }
+        var targetQuery = new URLSearchParams(url.search);
+        targetQuery.delete('spa');
 
-        if (content.dataset.currentPage === targetPage) {
+        if (
+            content.dataset.currentPage === targetPage &&
+            (content.dataset.currentQuery || '') === getQueryParamsWithoutPage(targetQuery).toString()
+        ) {
             setActiveMenu(targetPage);
             return;
         }
 
-        loadPage(targetPage, true);
+        loadPage(targetPage, true, getQueryParamsWithoutPage(targetQuery));
     });
 
     window.addEventListener('popstate', function () {
-        loadPage(getPageFromUrl(), false);
+        loadPage(getPageFromUrl(), false, getQueryParamsWithoutPage(window.location.search));
     });
 
+    content.dataset.currentQuery = getQueryParamsWithoutPage(window.location.search).toString();
     setActiveMenu(content.dataset.currentPage || getPageFromUrl());
     runPageHooks();
 })();

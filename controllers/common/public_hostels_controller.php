@@ -75,6 +75,7 @@ if (!$tableExists($pdo, 'hostels')) {
             'total_hostels' => 0,
             'total_rooms' => 0,
             'free_rooms' => 0,
+            'free_beds' => 0,
             'locations' => 0,
         ],
         'location_options' => [],
@@ -373,6 +374,7 @@ if ($roomTableExists) {
 
 $totalRooms = 0;
 $totalFreeRooms = 0;
+$totalFreeBeds = 0;
 $locations = [];
 
 foreach ($hostels as &$hostel) {
@@ -392,6 +394,7 @@ foreach ($hostels as &$hostel) {
 
     $totalRooms += (int)$hostel['total_rooms'];
     $totalFreeRooms += (int)$hostel['free_rooms'];
+    $totalFreeBeds += (int)$hostel['free_beds'];
 
     $location = trim((string)($hostel['location'] ?? ''));
     if ($location !== '') {
@@ -454,6 +457,7 @@ return [
         'total_hostels' => $totalHostelsAll,
         'total_rooms' => $totalRooms,
         'free_rooms' => $totalFreeRooms,
+        'free_beds' => $totalFreeBeds,
         'locations' => count($locations),
     ],
     'location_options' => $locationOptions,

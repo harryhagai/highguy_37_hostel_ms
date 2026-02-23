@@ -36,6 +36,10 @@ $genderOptions = $state['gender_options'];
             </div>
         </div>
 
+        <div class="alert alert-info py-2 px-3 small mb-3 hostel-booking-flow-note">
+            <i class="bi bi-info-circle me-1"></i>Select hostel first, then room, then bed. Booking flow: choose room, then select an available bed inside that room.
+        </div>
+
         <div class="users-filters mb-2">
             <div class="row g-2 align-items-center">
                 <div class="col-xl-4 col-lg-6 col-sm-6">
@@ -103,6 +107,10 @@ $genderOptions = $state['gender_options'];
                 'total_rooms' => (int)$hostel['total_rooms'],
                 'free_rooms' => (int)$hostel['free_rooms'],
                 'bed_capacity' => (int)$hostel['bed_capacity'],
+                'priced_rooms' => (int)($hostel['priced_rooms'] ?? 0),
+                'room_price_summary' => (string)($hostel['room_price_summary'] ?? 'Price not set'),
+                'room_price_min_label' => (string)($hostel['room_price_min_label'] ?? '-'),
+                'room_price_max_label' => (string)($hostel['room_price_max_label'] ?? '-'),
             ];
             ?>
             <article
@@ -170,6 +178,9 @@ $genderOptions = $state['gender_options'];
                 <div class="row g-3">
                     <div class="col-md-5">
                         <img id="studentModalHostelImage" src="" alt="Hostel" class="img-fluid rounded w-100 modal-hostel-image">
+                        <div class="alert alert-info py-2 px-3 small mt-2 mb-0 hostel-booking-flow-note">
+                            <i class="bi bi-info-circle me-1"></i>Select hostel first, then room, then bed. Booking flow: choose room, then select an available bed inside that room.
+                        </div>
                     </div>
                     <div class="col-md-7">
                         <h4 id="studentModalHostelName" class="mb-1"></h4>
@@ -181,8 +192,40 @@ $genderOptions = $state['gender_options'];
                             <span class="badge text-bg-success">Free: <span id="studentModalFreeRooms">0</span></span>
                             <span class="badge text-bg-primary">Beds: <span id="studentModalBedCapacity">0</span></span>
                         </div>
+
+                        <div class="hostel-detail-meta mt-3">
+                            <div class="hostel-detail-box">
+                                <p class="mb-1 small text-muted">Room/Bed Price Range</p>
+                                <h6 class="mb-0" id="studentModalRoomPriceSummary">Price not set</h6>
+                            </div>
+                            <div class="hostel-detail-box">
+                                <p class="mb-1 small text-muted">Rooms With Price</p>
+                                <h6 class="mb-0"><span id="studentModalPricedRooms">0</span> rooms</h6>
+                            </div>
+                            <div class="hostel-detail-box">
+                                <p class="mb-1 small text-muted">Lowest Price</p>
+                                <h6 class="mb-0" id="studentModalMinPrice">-</h6>
+                            </div>
+                            <div class="hostel-detail-box">
+                                <p class="mb-1 small text-muted">Highest Price</p>
+                                <h6 class="mb-0" id="studentModalMaxPrice">-</h6>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+            </div>
+            <div class="modal-footer">
+                <a
+                    href="#"
+                    id="studentModalSelectRoomBtn"
+                    data-spa-page="book_room"
+                    data-no-spinner="true"
+                    data-bs-dismiss="modal"
+                    class="btn btn-outline-primary">
+                    <i class="bi bi-check2-square me-1"></i>Select Room to Book Bed
+                </a>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

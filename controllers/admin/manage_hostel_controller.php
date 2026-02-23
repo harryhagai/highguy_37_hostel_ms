@@ -2,7 +2,7 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
-require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
+require_once __DIR__ . '/../../includes/admin_post_guard.php';
 
 $errors = [];
 $success = '';
@@ -275,6 +275,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'activate_hostel') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id > 0) {
+            if (!$hasHostelStatus) {
+                $errors[] = 'Hostel status column is missing.';
+            } else {
+                $stmt = $pdo->prepare("UPDATE hostels SET status = 'active' WHERE id = ?");
+                $stmt->execute([$id]);
+                $success = 'Hostel activated successfully.';
+            }
+        }
+    }
+
     if ($action === 'bulk_hostels') {
         $bulkAction = trim((string)($_POST['bulk_action_type'] ?? ''));
         $selectedIds = $_POST['selected_hostel_ids'] ?? [];
@@ -290,17 +303,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $ids = array_values($ids);
 
-        if ($bulkAction !== 'set_inactive') {
+        if (!in_array($bulkAction, ['set_inactive', 'set_active'], true)) {
             $errors[] = 'Choose a valid bulk action.';
         } elseif (empty($ids)) {
             $errors[] = 'Select at least one hostel for bulk action.';
         } elseif (!$hasHostelStatus) {
             $errors[] = 'Hostel status column is missing.';
         } else {
+            $targetStatus = $bulkAction === 'set_active' ? 'active' : 'inactive';
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $stmt = $pdo->prepare("UPDATE hostels SET status = 'inactive' WHERE id IN (" . $placeholders . ")");
+            $stmt = $pdo->prepare("UPDATE hostels SET status = '" . $targetStatus . "' WHERE id IN (" . $placeholders . ")");
             $stmt->execute($ids);
-            $success = count($ids) . ' hostel(s) disabled successfully.';
+            $success = count($ids) . ' hostel(s) ' . ($targetStatus === 'active' ? 'activated' : 'disabled') . ' successfully.';
         }
     }
 

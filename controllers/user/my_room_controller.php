@@ -2,13 +2,18 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../../includes/user_helpers.php';
+require_once __DIR__ . '/../../includes/payment_helpers.php';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
+payment_expire_unpaid_pending_bookings($pdo, payment_booking_hold_minutes());
+$bookingLock = user_get_booking_lock_info($pdo, $userId);
 
 $state = [
     'message' => null,
     'room' => null,
+    'can_book' => !$bookingLock['blocked'],
+    'booking_lock' => $bookingLock,
     'residents' => [],
     'stats' => [
         'occupants' => 0,
@@ -162,6 +167,15 @@ if (!$currentBooking) {
     $state['message'] = [
         'type' => 'info',
         'text' => 'You do not have an active room assignment yet. Book a bed first to see your roommates.',
+    ];
+    return $state;
+}
+
+$currentStatus = user_normalize_booking_status((string)($currentBooking['status'] ?? 'pending'));
+if ($currentStatus !== 'confirmed') {
+    $state['message'] = [
+        'type' => 'info',
+        'text' => 'Your booking is pending confirmation. Room details will appear after your booking is confirmed.',
     ];
     return $state;
 }

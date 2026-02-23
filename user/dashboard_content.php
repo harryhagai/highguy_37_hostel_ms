@@ -5,61 +5,87 @@ rp_require_roles(['user'], '../auth/login.php');
 $state = require __DIR__ . '/../controllers/user/dashboard_controller.php';
 $stats = $state['stats'];
 $recentBookings = $state['recent_bookings'];
-$announcement = $state['announcement'];
-$suggestedHostels = $state['suggested_hostels'];
+$announcements = is_array($state['announcements'] ?? null) ? $state['announcements'] : [];
+$announcementCount = (int)($state['announcement_count'] ?? count($announcements));
+$canBook = (bool)($state['can_book'] ?? true);
+$studentDisplayName = trim((string)($state['student_display_name'] ?? 'Student'));
+$studentDisplayName = $studentDisplayName !== '' ? $studentDisplayName : 'Student';
+$bookingLock = is_array($state['booking_lock'] ?? null) ? $state['booking_lock'] : ['blocked' => false, 'message' => ''];
 ?>
 <div class="dashboard-intro-card dashboard-card mb-3 user-hero-card">
     <div class="dashboard-intro-left">
         <p class="dashboard-kicker mb-1">Student Overview</p>
-        <h4 class="mb-1">Welcome to your hostel space</h4>
+        <h4 class="mb-1">Welcome <span class="student-name-highlight"><?= htmlspecialchars($studentDisplayName) ?></span> to your hostel space</h4>
         <p class="text-muted mb-0">Track your booking progress, find available hostels, and reserve rooms faster.</p>
     </div>
     <div class="dashboard-intro-right d-flex gap-2 flex-wrap">
         <a href="user_dashboard_layout.php?page=view_hostels" data-spa-page="view_hostels" data-no-spinner="true" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-buildings me-1"></i>Browse Hostels
         </a>
+        <?php if ($canBook): ?>
+            <a href="user_dashboard_layout.php?page=book_bed" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-calendar-plus me-1"></i>Book Bed
+            </a>
+        <?php else: ?>
+            <a href="user_dashboard_layout.php?page=my_bed" data-spa-page="my_bed" data-no-spinner="true" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-house-check me-1"></i>View My Bed
+            </a>
+        <?php endif; ?>
         <a href="user_dashboard_layout.php?page=my_bookings" data-spa-page="my_bookings" data-no-spinner="true" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-journal-check me-1"></i>My Bookings
+        </a>
+        <a href="user_dashboard_layout.php?page=my_room" data-spa-page="my_room" data-no-spinner="true" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-house-heart me-1"></i>My Room
         </a>
     </div>
 </div>
 
+<div class="alert alert-info py-2 px-3 small mb-3 hostel-booking-flow-note">
+    <i class="bi bi-info-circle me-1"></i>Select hostel first, then room, then bed. Booking flow: choose room, then select an available bed inside that room.
+</div>
+
+<?php if (!empty($bookingLock['blocked'])): ?>
+    <div class="alert alert-warning mb-3">
+        <i class="bi bi-lock me-1"></i><?= htmlspecialchars((string)($bookingLock['message'] ?? 'Booking is currently locked for your account.')) ?>
+    </div>
+<?php endif; ?>
+
 <div class="stats-grid mb-3 user-stats-grid">
-    <article class="stat-card">
+    <a href="user_dashboard_layout.php?page=my_bookings" data-spa-page="my_bookings" data-no-spinner="true" class="stat-card stat-card-link">
         <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
         <div>
             <p class="stat-label">Total Bookings</p>
             <h3 class="stat-value"><?= (int)$stats['total_bookings'] ?></h3>
         </div>
-    </article>
-    <article class="stat-card">
+    </a>
+    <a href="user_dashboard_layout.php?page=my_bookings" data-spa-page="my_bookings" data-no-spinner="true" class="stat-card stat-card-link">
         <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
         <div>
             <p class="stat-label">Pending</p>
             <h3 class="stat-value"><?= (int)$stats['pending'] ?></h3>
         </div>
-    </article>
-    <article class="stat-card">
+    </a>
+    <a href="user_dashboard_layout.php?page=my_bed" data-spa-page="my_bed" data-no-spinner="true" class="stat-card stat-card-link">
         <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
         <div>
             <p class="stat-label">Confirmed</p>
             <h3 class="stat-value"><?= (int)$stats['confirmed'] ?></h3>
         </div>
-    </article>
-    <article class="stat-card">
+    </a>
+    <a href="user_dashboard_layout.php?page=view_hostels" data-spa-page="view_hostels" data-no-spinner="true" class="stat-card stat-card-link">
         <div class="stat-icon"><i class="bi bi-door-open"></i></div>
         <div>
             <p class="stat-label">Rooms Available</p>
             <h3 class="stat-value"><?= (int)$stats['available_rooms'] ?></h3>
         </div>
-    </article>
+    </a>
 </div>
 
 <div class="row g-3 mb-3">
-    <div class="col-xl-8">
+    <div class="col-xl-6 order-2 order-xl-1">
         <div class="dashboard-card h-100">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Bookings</h5>
+                <h5 class="mb-0 dashboard-section-title dashboard-section-title-bookings"><i class="bi bi-clock-history me-2"></i>Recent Bookings</h5>
                 <a href="user_dashboard_layout.php?page=my_bookings" data-spa-page="my_bookings" data-no-spinner="true" class="btn btn-sm btn-outline-secondary">View all</a>
             </div>
 
@@ -90,44 +116,28 @@ $suggestedHostels = $state['suggested_hostels'];
         </div>
     </div>
 
-    <div class="col-xl-4">
+    <div class="col-xl-6 order-1 order-xl-2">
         <div class="dashboard-card h-100">
-            <h5 class="mb-3"><i class="bi bi-megaphone me-2"></i>Announcement</h5>
-            <?php if (!empty($announcement)): ?>
-                <h6 class="mb-1"><?= htmlspecialchars((string)$announcement['title']) ?></h6>
-                <p class="text-muted mb-2"><?= nl2br(htmlspecialchars((string)$announcement['content'])) ?></p>
-                <small class="text-muted">Posted: <?= date('d M Y', strtotime((string)$announcement['created_at'])) ?></small>
-            <?php else: ?>
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h5 class="mb-0 dashboard-section-title dashboard-section-title-announcement"><i class="bi bi-megaphone me-2"></i>Announcement</h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge text-bg-light announcement-count-badge"><?= (int)$announcementCount ?> total</span>
+                    <a href="user_dashboard_layout.php?page=notices" data-spa-page="notices" data-no-spinner="true" class="btn btn-sm btn-outline-secondary">View all</a>
+                </div>
+            </div>
+            <?php if (empty($announcements)): ?>
                 <div class="alert alert-light border mb-0">No announcements at this time.</div>
+            <?php else: ?>
+                <div class="announcement-scroll-list">
+                    <?php foreach ($announcements as $notice): ?>
+                        <article class="announcement-item">
+                            <h6 class="mb-1"><?= htmlspecialchars((string)($notice['title'] ?? 'Untitled Notice')) ?></h6>
+                            <p class="mb-2 small text-muted"><?= nl2br(htmlspecialchars((string)($notice['content'] ?? ''))) ?></p>
+                            <small class="text-muted">Posted: <?= htmlspecialchars((string)($notice['created_at_display'] ?? '-')) ?></small>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
             <?php endif; ?>
         </div>
     </div>
-</div>
-
-<div class="dashboard-card">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h5 class="mb-0"><i class="bi bi-buildings me-2"></i>Recommended Hostels</h5>
-        <a href="user_dashboard_layout.php?page=view_hostels" data-spa-page="view_hostels" data-no-spinner="true" class="btn btn-sm btn-outline-primary">Open all hostels</a>
-    </div>
-
-    <?php if (empty($suggestedHostels)): ?>
-        <div class="alert alert-light border mb-0">No hostels available right now.</div>
-    <?php else: ?>
-        <div class="student-hostel-grid compact-grid">
-            <?php foreach ($suggestedHostels as $hostel): ?>
-                <article class="student-hostel-card">
-                    <img src="<?= htmlspecialchars((string)$hostel['hostel_image_url']) ?>" alt="Hostel" class="student-hostel-thumb">
-                    <div class="student-hostel-body">
-                        <h6 class="mb-1"><?= htmlspecialchars((string)$hostel['name']) ?></h6>
-                        <p class="mb-2 small text-muted"><?= htmlspecialchars((string)$hostel['location']) ?></p>
-                        <div class="d-flex flex-wrap gap-2 mb-2">
-                            <span class="badge text-bg-light"><?= htmlspecialchars((string)($hostel['gender_label'] ?? 'All Genders')) ?></span>
-                            <span class="badge text-bg-success"><?= (int)$hostel['free_rooms'] ?> free rooms</span>
-                        </div>
-                        <a href="user_dashboard_layout.php?page=book_bed&hostel_id=<?= (int)$hostel['id'] ?>" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-sm btn-outline-primary">Book Bed</a>
-                    </div>
-                </article>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
 </div>

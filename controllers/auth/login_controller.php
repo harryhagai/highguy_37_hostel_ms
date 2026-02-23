@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../../config/db_connection.php';
 require_once __DIR__ . '/remember_me.php';
 require_once __DIR__ . '/../common/activity_logger.php';
+require_once __DIR__ . '/../../helpers/auth_throttle_helper.php';
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -123,16 +124,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim((string)($_POST['email'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
     $rememberMe = isset($_POST['remember_me']) && $_POST['remember_me'] === '1';
+    $identifier = auth_throttle_identifier($email, (string)($_SERVER['REMOTE_ADDR'] ?? ''));
+    $shouldCountFailure = false;
+    $isLocked = false;
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $setFieldError($fieldErrors, 'email', 'Please enter a valid email address.');
+    try {
+        $lockState = auth_throttle_is_locked($pdo, 'login', $identifier);
+        if (!empty($lockState['locked'])) {
+            $generalErrors[] = auth_throttle_lock_message('login', (string)($lockState['locked_until'] ?? ''));
+            $isLocked = true;
+        }
+    } catch (Throwable $e) {
+        error_log('Login throttle check failed: ' . $e->getMessage());
+        $generalErrors[] = 'Unable to process login right now. Please try again.';
     }
-    if ($password === '') {
-        $setFieldError($fieldErrors, 'password', 'Please enter your password.');
+
+    if (!$isLocked) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $setFieldError($fieldErrors, 'email', 'Please enter a valid email address.');
+            $shouldCountFailure = true;
+        }
+        if ($password === '') {
+            $setFieldError($fieldErrors, 'password', 'Please enter your password.');
+            $shouldCountFailure = true;
+        }
     }
 
     $hasFieldErrors = implode('', $fieldErrors) !== '';
-    if (!$hasFieldErrors && empty($generalErrors)) {
+    if (!$isLocked && !$hasFieldErrors && empty($generalErrors)) {
         $selectSql = 'SELECT id, username, email, password, role';
         if ($userColumnExists($pdo, 'status')) {
             $selectSql .= ', status';
@@ -147,6 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $status = strtolower(trim((string)($user['status'] ?? 'active')));
             if ($status === 'suspended') {
                 $generalErrors[] = 'Your account is suspended. Contact admin.';
+                $shouldCountFailure = true;
             } else {
                 $setSessionFromUser($user);
                 $markLogin($pdo, (int)$user['id'], true);
@@ -165,12 +185,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if (empty($generalErrors) && implode('', $fieldErrors) === '') {
+                    try {
+                        auth_throttle_clear($pdo, 'login', $identifier);
+                    } catch (Throwable $e) {
+                        error_log('Login throttle clear failed: ' . $e->getMessage());
+                    }
                     $redirectByRole((string)$user['role']);
                 }
             }
         } else {
             $setFieldError($fieldErrors, 'email', 'Invalid email or password.');
             $setFieldError($fieldErrors, 'password', 'Invalid email or password.');
+            $shouldCountFailure = true;
+        }
+    }
+
+    if (!$isLocked && $shouldCountFailure) {
+        try {
+            $state = auth_throttle_register_failure($pdo, 'login', $identifier, 3, 10800);
+            $lockedUntil = (string)($state['locked_until'] ?? '');
+            if ($lockedUntil !== '' && strtotime($lockedUntil) > time()) {
+                $generalErrors[] = auth_throttle_lock_message('login', $lockedUntil);
+            }
+        } catch (Throwable $e) {
+            error_log('Login throttle register failed: ' . $e->getMessage());
+            $generalErrors[] = 'Unable to process login attempts right now. Please try again.';
         }
     }
 }

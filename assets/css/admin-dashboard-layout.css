@@ -102,6 +102,88 @@ body.sidebar-collapsed {
     min-width: 230px;
 }
 
+.notification-menu {
+    min-width: min(360px, 92vw) !important;
+    padding: 0.35rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+}
+
+.notification-menu .dropdown-header {
+    font-size: 0.8rem;
+    color: #334155;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    border-radius: 10px;
+    padding: 0.55rem 0.6rem;
+    white-space: normal;
+}
+
+.notification-item:hover,
+.notification-item:focus {
+    background: #f8fafc;
+}
+
+.notification-item-icon {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1.9rem;
+}
+
+.notification-tone-warning {
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.16);
+}
+
+.notification-tone-danger {
+    color: #b91c1c;
+    background: rgba(239, 68, 68, 0.14);
+}
+
+.notification-tone-success {
+    color: #0f766e;
+    background: rgba(20, 184, 166, 0.14);
+}
+
+.notification-tone-info {
+    color: #1d4ed8;
+    background: rgba(59, 130, 246, 0.14);
+}
+
+.notification-item-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.notification-item-copy strong {
+    color: #0f172a;
+    font-size: 0.81rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.notification-item-copy small {
+    color: #64748b;
+    font-size: 0.74rem;
+    line-height: 1.32;
+}
+
+.notification-view-all {
+    text-align: center;
+    font-weight: 600;
+    border-radius: 10px;
+}
+
 .icon-btn {
     width: 38px;
     height: 38px;

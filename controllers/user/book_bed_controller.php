@@ -2,19 +2,28 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../../includes/user_helpers.php';
+require_once __DIR__ . '/../../includes/payment_helpers.php';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
+
+payment_expire_unpaid_pending_bookings($pdo, payment_booking_hold_minutes());
 
 $state = [
     'errors' => [],
     'message' => null,
     'beds' => [],
+    'can_book' => true,
+    'booking_lock' => null,
     'stats' => [
         'available_beds' => 0,
         'hostels' => 0,
         'locations' => 0,
     ],
+    'semester_options' => [],
+    'default_semester_id' => 0,
+    'user_phone' => '',
+    'semester_ready' => true,
     'filters' => [
         'search' => '',
         'hostel_id' => 0,
@@ -55,6 +64,12 @@ $bookingHasStatus = user_column_exists($pdo, 'bookings', 'status');
 $bookingHasStart = user_column_exists($pdo, 'bookings', 'start_date');
 $bookingHasEnd = user_column_exists($pdo, 'bookings', 'end_date');
 $bookingHasBookingDate = user_column_exists($pdo, 'bookings', 'booking_date');
+$bookingTokenColumn = user_booking_token_column($pdo);
+$bookingHasSemesterId = user_column_exists($pdo, 'bookings', 'semester_id');
+$bookingHasSemesterName = user_column_exists($pdo, 'bookings', 'semester_name');
+$bookingHasSemesterMonths = user_column_exists($pdo, 'bookings', 'semester_months');
+$bookingHasMonthlyPrice = user_column_exists($pdo, 'bookings', 'monthly_price');
+$bookingHasTotalPrice = user_column_exists($pdo, 'bookings', 'total_price');
 
 if (!$bookingHasUser || !$bookingHasBedId) {
     $state['errors'][] = 'Bookings schema must include user_id and bed_id for bed booking.';
@@ -69,9 +84,28 @@ $hostelHasStatus = user_column_exists($pdo, 'hostels', 'status');
 $hostelHasGender = user_column_exists($pdo, 'hostels', 'gender');
 $supportRoomImages = user_table_exists($pdo, 'room_images') && user_column_exists($pdo, 'rooms', 'room_image_id');
 $usersHavePhone = user_column_exists($pdo, 'users', 'phone');
+$bookingLock = user_get_booking_lock_info($pdo, $userId);
+$state['can_book'] = !$bookingLock['blocked'];
+$state['booking_lock'] = $bookingLock;
 
-$selectedStartDate = trim((string)($_GET['start_date'] ?? date('Y-m-d')));
-$selectedEndDate = trim((string)($_GET['end_date'] ?? date('Y-m-d', strtotime('+30 days'))));
+$semesters = user_fetch_active_semesters($pdo);
+$state['semester_options'] = $semesters;
+$defaultSemester = user_find_current_semester($semesters) ?? ($semesters[0] ?? null);
+$state['default_semester_id'] = (int)($defaultSemester['id'] ?? 0);
+
+if ($usersHavePhone && user_table_exists($pdo, 'users')) {
+    $stmt = $pdo->prepare('SELECT phone FROM users WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $state['user_phone'] = trim((string)$stmt->fetchColumn());
+}
+
+if (empty($semesters)) {
+    $state['errors'][] = 'No active semester has been configured by admin.';
+    $state['semester_ready'] = false;
+}
+
+$selectedStartDate = trim((string)($_GET['start_date'] ?? (string)($defaultSemester['start_date'] ?? date('Y-m-d'))));
+$selectedEndDate = trim((string)($_GET['end_date'] ?? (string)($defaultSemester['end_date'] ?? date('Y-m-d', strtotime('+30 days')))));
 if (strtotime($selectedStartDate) === false) {
     $selectedStartDate = date('Y-m-d');
 }
@@ -111,6 +145,13 @@ if (user_table_exists($pdo, 'users') && user_column_exists($pdo, 'users', 'gende
     }
 }
 
+$dbNow = '';
+try {
+    $dbNow = (string)$pdo->query('SELECT NOW()')->fetchColumn();
+} catch (Throwable $e) {
+    $dbNow = date('Y-m-d H:i:s');
+}
+
 $canAccessHostelByGender = static function (string $hostelGender, string $userGender): bool {
     if ($hostelGender === 'all') {
         return true;
@@ -121,47 +162,24 @@ $canAccessHostelByGender = static function (string $hostelGender, string $userGe
     return $hostelGender === $userGender;
 };
 
-$findExistingBooking = static function () use ($pdo, $userId, $bookingHasStatus, $bookingHasEnd): ?array {
-    $select = ['id'];
-    if ($bookingHasStatus) {
-        $select[] = 'status';
-    }
-    if ($bookingHasEnd) {
-        $select[] = 'end_date';
-    }
-
-    $sql = 'SELECT ' . implode(', ', $select) . ' FROM bookings WHERE user_id = ?';
-    if ($bookingHasStatus) {
-        $sql .= " AND LOWER(COALESCE(status, '')) IN ('pending', 'confirmed', 'approved')";
-    }
-    if ($bookingHasEnd) {
-        $sql .= ' AND end_date >= CURDATE()';
-    }
-    $sql .= ' ORDER BY id DESC LIMIT 1';
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$userId]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $row ?: null;
-};
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'book_bed') {
     $bedId = (int)($_POST['bed_id'] ?? 0);
-    $phone = trim((string)($_POST['phone'] ?? ''));
-    $bookingStartDate = trim((string)($_POST['start_date'] ?? $selectedStartDate));
-    $bookingEndDate = trim((string)($_POST['end_date'] ?? $selectedEndDate));
+    $semesterId = (int)($_POST['semester_id'] ?? (int)($defaultSemester['id'] ?? 0));
+    $selectedSemester = user_find_semester_by_id($semesters, $semesterId);
+    $bookingStartDate = (string)($selectedSemester['start_date'] ?? '');
+    $bookingEndDate = (string)($selectedSemester['end_date'] ?? '');
+    $semesterName = (string)($selectedSemester['name'] ?? '');
+    $semesterMonths = (int)($selectedSemester['months'] ?? 0);
 
-    if ($bookingHasStart && strtotime($bookingStartDate) === false) {
-        $bookingStartDate = $selectedStartDate;
-    }
-    if ($bookingHasEnd && strtotime($bookingEndDate) === false) {
-        $bookingEndDate = $selectedEndDate;
-    }
-
-    if ($findExistingBooking()) {
+    if ($bookingLock['blocked']) {
         $state['message'] = [
             'type' => 'warning',
-            'text' => 'You already have an active booking request.',
+            'text' => (string)($bookingLock['message'] ?? 'You already have an active booking request.'),
+        ];
+    } elseif (!$selectedSemester) {
+        $state['message'] = [
+            'type' => 'danger',
+            'text' => 'Please select a valid semester.',
         ];
     } elseif ($bedId <= 0) {
         $state['message'] = [
@@ -171,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     } elseif ($bookingHasStart && $bookingHasEnd && strtotime($bookingEndDate) <= strtotime($bookingStartDate)) {
         $state['message'] = [
             'type' => 'danger',
-            'text' => 'End date must be after start date.',
+            'text' => 'Selected semester has invalid date range.',
         ];
     } else {
         $verifyFields = [
@@ -239,6 +257,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                         'text' => 'Selected bed has already been booked for that period.',
                     ];
                 } else {
+                    $monthlyPrice = max(0, (float)($selectedBed['price'] ?? 0));
+                    $totalPrice = $monthlyPrice * max(1, $semesterMonths);
                     $columns = ['user_id', 'bed_id'];
                     $values = [$userId, $bedId];
                     $placeholders = ['?', '?'];
@@ -265,22 +285,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                     }
                     if ($bookingHasBookingDate) {
                         $columns[] = 'booking_date';
-                        $values[] = date('Y-m-d H:i:s');
+                        $values[] = $dbNow;
+                        $placeholders[] = '?';
+                    }
+                    if ($bookingTokenColumn !== '') {
+                        $columns[] = $bookingTokenColumn;
+                        $values[] = user_generate_booking_token();
+                        $placeholders[] = '?';
+                    }
+                    if ($bookingHasSemesterId) {
+                        $columns[] = 'semester_id';
+                        $values[] = (int)$selectedSemester['id'];
+                        $placeholders[] = '?';
+                    }
+                    if ($bookingHasSemesterName) {
+                        $columns[] = 'semester_name';
+                        $values[] = $semesterName;
+                        $placeholders[] = '?';
+                    }
+                    if ($bookingHasSemesterMonths) {
+                        $columns[] = 'semester_months';
+                        $values[] = $semesterMonths;
+                        $placeholders[] = '?';
+                    }
+                    if ($bookingHasMonthlyPrice) {
+                        $columns[] = 'monthly_price';
+                        $values[] = $monthlyPrice;
+                        $placeholders[] = '?';
+                    }
+                    if ($bookingHasTotalPrice) {
+                        $columns[] = 'total_price';
+                        $values[] = $totalPrice;
                         $placeholders[] = '?';
                     }
 
                     $sql = 'INSERT INTO bookings (' . implode(', ', $columns) . ') VALUES (' . implode(', ', $placeholders) . ')';
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute($values);
-
-                    if ($phone !== '' && $usersHavePhone) {
-                        $stmt = $pdo->prepare('UPDATE users SET phone = ? WHERE id = ?');
-                        $stmt->execute([$phone, $userId]);
+                    $bookingId = (int)$pdo->lastInsertId();
+                    if (!headers_sent()) {
+                        $redirect = 'user_dashboard_layout.php?page=payment_verification&booking_id=' . $bookingId . '&just_booked=1';
+                        header('Location: ' . $redirect, true, 303);
+                        exit;
                     }
 
                     $state['message'] = [
                         'type' => 'success',
-                        'text' => 'Bed ' . (string)$selectedBed['bed_number'] . ' booked successfully.',
+                        'text' => 'Bed booked successfully. Please submit payment transaction ID to complete verification.',
                     ];
                 }
             }

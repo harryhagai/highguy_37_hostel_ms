@@ -2,7 +2,7 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../../includes/user_helpers.php';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
 

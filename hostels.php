@@ -194,7 +194,7 @@ $hostelsForModal = array_values(array_map(
                                         <span class="public-hostel-price-badge">
                                             <i class="bi bi-cash-coin me-1"></i>
                                             <?php if ($priceDisplay !== null): ?>
-                                                From TSh <?= htmlspecialchars($priceDisplay, ENT_QUOTES, 'UTF-8') ?>/room
+                                                From TSh <?= htmlspecialchars($priceDisplay, ENT_QUOTES, 'UTF-8') ?>/Bed
                                             <?php else: ?>
                                                 Price on request
                                             <?php endif; ?>

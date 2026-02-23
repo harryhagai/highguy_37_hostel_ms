@@ -4,7 +4,7 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
 }
 
 require_once __DIR__ . '/../common/activity_logger.php';
-require_once __DIR__ . '/../../admin/includes/admin_post_guard.php';
+require_once __DIR__ . '/../../includes/admin_post_guard.php';
 
 $errors = [];
 $success = '';

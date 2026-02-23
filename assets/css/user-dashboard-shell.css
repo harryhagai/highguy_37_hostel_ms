@@ -8,6 +8,63 @@ body.user-dashboard-theme .header-title i {
     color: var(--accent);
 }
 
+body.user-dashboard-theme .user-header-title {
+    gap: 0.52rem;
+}
+
+body.user-dashboard-theme .header-title-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: none;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+/* Show header logo only on mobile */
+@media (max-width: 600px) {
+    body.user-dashboard-theme .header-title-logo {
+        display: block;
+    }
+}
+
+body.user-dashboard-theme .user-header-title .title-mobile {
+    display: none;
+    flex-direction: column;
+    line-height: 1;
+}
+
+body.user-dashboard-theme .user-header-title .title-mobile-main {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+body.user-dashboard-theme .user-header-title .title-mobile-sub {
+    font-size: 0.54rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+body.user-dashboard-theme .header-profile-initials {
+    width: 40px;
+    height: 40px;
+    min-width: 30px;
+    padding: 0;
+    border-radius: 999px;
+    background: #e0f2fe;
+    color: #0f766e;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.04em;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.22);
+}
+
 body.user-dashboard-theme .icon-btn:hover,
 body.user-dashboard-theme .profile-trigger:hover {
     background: #e0f2fe;
@@ -27,4 +84,38 @@ body.user-dashboard-theme .sidebar .profile-name {
 
 body.user-dashboard-theme .dashboard-card {
     border: 1px solid #e2e8f0;
+}
+
+@media (max-width: 600px) {
+    body.user-dashboard-theme .header-left {
+        min-width: 0;
+        gap: 0.45rem;
+    }
+
+    body.user-dashboard-theme .user-header-title .title-desktop {
+        display: none;
+    }
+
+    body.user-dashboard-theme .user-header-title .title-mobile {
+        display: flex;
+    }
+
+    body.user-dashboard-theme .sidebar-toggle-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    body.user-dashboard-theme .user-menu .header-profile-initials {
+        display: inline-flex !important;
+        max-width: none;
+    }
+
+    body.user-dashboard-theme .profile-trigger {
+        padding-left: 4px;
+        padding-right: 6px;
+    }
+
+    body.user-dashboard-theme .profile-trigger > .bi {
+        display: none;
+    }
 }

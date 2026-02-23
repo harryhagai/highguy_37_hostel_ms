@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HostelPro Diagrams Visualization</title>
+    <style>
+        :root {
+            --bg: #f8f9fc;
+            --card: #ffffff;
+            --border: #c9edf0;
+            --text: #233142;
+            --muted: #4f6375;
+            --brand: #11998e;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 16px;
+        }
+
+        .title {
+            margin: 0 0 6px;
+            font-size: 28px;
+            color: var(--brand);
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 22px rgba(17, 153, 142, 0.08);
+            overflow-x: auto;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            color: var(--brand);
+        }
+
+        .mermaid {
+            min-width: 700px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="header">
+            <h1 class="title">HostelPro Diagrams</h1>
+            <p class="subtitle">Use Case, Flow, and Sequence visualization</p>
+        </div>
+
+        <section class="card">
+            <h2>Use Case Diagram</h2>
+            <div class="mermaid">
+flowchart LR
+    G[Guest]
+    U[Registered User]
+    A[Admin]
+    M[Email Service]
+    P[Payment Verification]
+
+    UC1([View Public Hostels])
+    UC2([Register Account])
+    UC3([Login])
+    UC4([Forgot Password Request])
+    UC5([Reset Password])
+    UC6([View User Dashboard])
+    UC7([Book Bed or Room])
+    UC8([Submit Payment Proof])
+    UC9([View My Bookings / Bed / Room])
+    UC10([View Notices])
+    UC11([Update Profile])
+
+    AC1([Manage Users])
+    AC2([Manage Hostels])
+    AC3([Manage Rooms])
+    AC4([Manage Beds])
+    AC5([Manage Applications / Bookings])
+    AC6([Manage Notices])
+    AC7([Manage Payment Settings])
+    AC8([Manage Semester Settings])
+    AC9([View Admin Dashboard])
+
+    G --> UC1
+    G --> UC2
+    G --> UC3
+    G --> UC4
+    G --> UC5
+
+    U --> UC3
+    U --> UC6
+    U --> UC7
+    U --> UC8
+    U --> UC9
+    U --> UC10
+    U --> UC11
+    U --> UC4
+    U --> UC5
+
+    A --> UC3
+    A --> AC1
+    A --> AC2
+    A --> AC3
+    A --> AC4
+    A --> AC5
+    A --> AC6
+    A --> AC7
+    A --> AC8
+    A --> AC9
+
+    UC4 --> M
+    UC5 --> M
+    UC8 --> P
+    AC5 --> P
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Flow Diagram</h2>
+            <div class="mermaid">
+flowchart TD
+    S([Start]) --> G{Has account?}
+
+    G -- No --> R[Register]
+    R --> L[Login]
+    G -- Yes --> L
+
+    L --> T1{Login locked?}
+    T1 -- Yes --> W1[Show lock message: wait up to 3 hours]
+    W1 --> E([End])
+    T1 -- No --> C1{Credentials valid?}
+    C1 -- No --> F1[Increase failed attempts]
+    F1 --> T2{Attempts >= 3?}
+    T2 -- Yes --> K1[Lock login for 3 hours]
+    K1 --> E
+    T2 -- No --> L
+
+    C1 -- Yes --> RB{Role}
+    RB -- Admin --> AD[Open Admin Dashboard]
+    RB -- User --> UD[Open User Dashboard]
+
+    AD --> AM[Admin modules: users, hostels, rooms, beds, applications, notices, settings]
+    AM --> E
+
+    UD --> U1[Browse hostels and availability]
+    U1 --> U2[Book bed or room]
+    U2 --> U3[Submit payment verification]
+    U3 --> U4[Track booking status and notices]
+    U4 --> E
+
+    L --> FP{Forgot password?}
+    FP -- Yes --> FPL[Forgot-password request]
+    FP -- No --> RB
+
+    FPL --> T3{Forgot locked?}
+    T3 -- Yes --> W2[Show lock message: wait up to 3 hours]
+    W2 --> E
+    T3 -- No --> EM{Email exists?}
+    EM -- No --> F2[Increase forgot failed attempts]
+    F2 --> T4{Attempts >= 3?}
+    T4 -- Yes --> K2[Lock forgot flow for 3 hours]
+    K2 --> E
+    T4 -- No --> FPL
+    EM -- Yes --> SEND[Generate token and send reset email]
+    SEND --> RESET[User opens reset link and sets new password]
+    RESET --> L
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Sequence Diagram</h2>
+            <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Auth/User UI
+    participant LoginC as Login Controller
+    participant Throttle as Auth Throttle Helper
+    participant DB as MySQL Database
+    participant UserC as User Booking Controller
+    participant PayC as Payment Verification Controller
+    participant AdminC as Admin Application Controller
+
+    User->>UI: Submit login(email, password)
+    UI->>LoginC: POST login request
+    LoginC->>Throttle: Check lock status(login, identifier)
+    Throttle->>DB: Read auth_attempt_locks
+    DB-->>Throttle: lock status
+    Throttle-->>LoginC: locked or not
+
+    alt Account/Login lock active
+        LoginC-->>UI: Error: locked for 3 hours window
+    else Not locked
+        LoginC->>DB: Validate user credentials
+        DB-->>LoginC: User row / no match
+        alt Invalid credentials
+            LoginC->>Throttle: Register failed login attempt
+            Throttle->>DB: Update auth_attempt_locks
+            LoginC-->>UI: Invalid email or password
+        else Valid credentials
+            LoginC->>Throttle: Clear login attempt record
+            Throttle->>DB: Delete lock row for identifier
+            LoginC-->>UI: Auth success + redirect to user dashboard
+        end
+    end
+
+    User->>UI: Choose bed/room and submit booking
+    UI->>UserC: POST booking details
+    UserC->>DB: Validate availability + create booking(pending)
+    DB-->>UserC: Booking created
+    UserC-->>UI: Booking submitted (pending review/payment)
+
+    User->>UI: Upload payment verification details
+    UI->>PayC: POST payment verification
+    PayC->>DB: Save verification info
+    DB-->>PayC: Saved
+    PayC-->>UI: Verification submitted
+
+    AdminC->>DB: Review pending applications
+    DB-->>AdminC: Pending list
+    AdminC->>DB: Approve/Reject booking
+    DB-->>AdminC: Booking updated
+    AdminC-->>UI: Status change reflected to user/admin views
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</body>
+</html>

@@ -2,9 +2,12 @@
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../../includes/user_helpers.php';
+require_once __DIR__ . '/../../includes/payment_helpers.php';
 
 $userId = (int)($_SESSION['user_id'] ?? 0);
+
+payment_expire_unpaid_pending_bookings($pdo, payment_booking_hold_minutes());
 
 $stats = [
     'total_bookings' => 0,
@@ -16,6 +19,18 @@ $stats = [
 ];
 
 $recentBookings = [];
+$bookingLock = user_get_booking_lock_info($pdo, $userId);
+$studentDisplayName = 'Student';
+
+if ($userId > 0 && user_table_exists($pdo, 'users') && user_column_exists($pdo, 'users', 'username')) {
+    $stmt = $pdo->prepare('SELECT username FROM users WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $rawName = (string)$stmt->fetchColumn();
+    $normalizedName = trim((string)(preg_replace('/\s+/', ' ', str_replace('_', ' ', $rawName)) ?? ''));
+    if ($normalizedName !== '') {
+        $studentDisplayName = ucwords(strtolower($normalizedName));
+    }
+}
 
 if ($userId > 0 && user_table_exists($pdo, 'bookings') && user_column_exists($pdo, 'bookings', 'user_id')) {
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM bookings WHERE user_id = ?');
@@ -109,26 +124,16 @@ foreach ($recentBookings as &$booking) {
 }
 unset($booking);
 
-$announcement = user_get_latest_notice($pdo);
-
-$suggestedHostels = user_fetch_hostel_cards($pdo, true);
-foreach ($suggestedHostels as &$suggestedHostel) {
-    $suggestedHostel['gender_label'] = user_gender_label((string)($suggestedHostel['gender'] ?? 'all'));
-}
-unset($suggestedHostel);
-usort($suggestedHostels, static function (array $a, array $b): int {
-    $freeA = (int)($a['free_rooms'] ?? 0);
-    $freeB = (int)($b['free_rooms'] ?? 0);
-    if ($freeA === $freeB) {
-        return strcmp((string)($b['created_date'] ?? ''), (string)($a['created_date'] ?? ''));
-    }
-    return $freeB <=> $freeA;
-});
-$suggestedHostels = array_slice($suggestedHostels, 0, 4);
+$announcementsState = user_fetch_notices_for_user($pdo, 20);
+$announcements = is_array($announcementsState['items'] ?? null) ? $announcementsState['items'] : [];
+$announcementCount = (int)($announcementsState['count'] ?? count($announcements));
 
 return [
     'stats' => $stats,
     'recent_bookings' => $recentBookings,
-    'announcement' => $announcement,
-    'suggested_hostels' => $suggestedHostels,
+    'announcements' => $announcements,
+    'announcement_count' => $announcementCount,
+    'can_book' => !$bookingLock['blocked'],
+    'booking_lock' => $bookingLock,
+    'student_display_name' => $studentDisplayName,
 ];
