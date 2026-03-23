@@ -79,8 +79,8 @@ if (user_table_exists($pdo, 'hostels')) {
 $latestNotice = user_get_latest_notice($pdo);
 $primaryBookingPage = !empty($bookingLock['blocked']) ? 'my_bed' : 'book_bed';
 $primaryBookingLabel = !empty($bookingLock['blocked']) ? 'My Bed' : 'Book Bed';
-$roomMenuPage = !empty($bookingLock['blocked']) ? 'my_bed' : 'view_hostels';
-$roomMenuLabel = !empty($bookingLock['blocked']) ? 'My Bed' : 'View Rooms';
+$roomMenuPage = !empty($bookingLock['blocked']) ? 'my_room' : 'view_hostels';
+$roomMenuLabel = !empty($bookingLock['blocked']) ? 'My Room' : 'View Rooms';
 $controlNumbers = payment_fetch_control_numbers($pdo, true);
 $defaultControlNumber = !empty($controlNumbers)
     ? trim((string)($controlNumbers[0]['control_number'] ?? ''))

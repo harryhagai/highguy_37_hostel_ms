@@ -78,6 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             auth_password_reset_consume($pdo, (int)$tokenRow['id']);
             auth_password_reset_invalidate_user_tokens($pdo, $userId, $email);
             auth_password_reset_revoke_remember_tokens($pdo, $userId);
+            error_log(
+                'Password reset successful: user_id=' . $userId
+                . ', token_id=' . (int)$tokenRow['id']
+            );
 
             $_SESSION['success'] = 'Password updated successfully. Please login with your new password.';
             header('Location: login.php');

@@ -148,8 +148,8 @@ $genderOptions = $state['gender_options'];
                             <i class="bi bi-eye me-1"></i>View
                         </button>
                         <?php if ((int)$hostel['free_rooms'] > 0): ?>
-                            <a href="user_dashboard_layout.php?page=book_bed&hostel_id=<?= (int)$hostel['id'] ?>" data-spa-page="book_bed" data-no-spinner="true" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-calendar-plus me-1"></i>Book Bed
+                            <a href="user_dashboard_layout.php?page=book_room&hostel_id=<?= (int)$hostel['id'] ?>" data-spa-page="book_room" data-no-spinner="true" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-door-open me-1"></i>View Rooms
                             </a>
                         <?php else: ?>
                             <button class="btn btn-secondary btn-sm" disabled>
@@ -223,7 +223,7 @@ $genderOptions = $state['gender_options'];
                     data-no-spinner="true"
                     data-bs-dismiss="modal"
                     class="btn btn-outline-primary">
-                    <i class="bi bi-check2-square me-1"></i>Select Room to Book Bed
+                    <i class="bi bi-check2-square me-1"></i>View Rooms
                 </a>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
             </div>

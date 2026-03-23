@@ -106,6 +106,37 @@ if (!function_exists('payment_seconds_remaining')) {
     }
 }
 
+if (!function_exists('payment_seconds_remaining_for_booking')) {
+    function payment_seconds_remaining_for_booking(PDO $db, int $bookingId, int $holdMinutes = 30): ?int
+    {
+        if ($bookingId <= 0 || !payment_table_exists($db, 'bookings')) {
+            return null;
+        }
+
+        $holdExpr = payment_hold_timestamp_expression($db, 'b');
+        if ($holdExpr === '') {
+            return null;
+        }
+
+        $sql = "SELECT GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD({$holdExpr}, INTERVAL ? MINUTE)))
+                FROM bookings b
+                WHERE b.id = ?
+                LIMIT 1";
+
+        try {
+            $stmt = $db->prepare($sql);
+            $stmt->execute([max(1, $holdMinutes), $bookingId]);
+            $value = $stmt->fetchColumn();
+            if ($value === false || $value === null) {
+                return null;
+            }
+            return max(0, (int)$value);
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+}
+
 if (!function_exists('payment_fetch_control_numbers')) {
     function payment_fetch_control_numbers(PDO $db, bool $onlyActive = true): array
     {

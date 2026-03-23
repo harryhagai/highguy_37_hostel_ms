@@ -106,7 +106,7 @@
             : new URLSearchParams(extraQuery || '');
         pageParams.set('page', page);
 
-        if ((page === 'book_room' || page === 'book_bed') && !pageParams.get('hostel_id')) {
+        if (page === 'book_bed' && !pageParams.get('hostel_id')) {
             var currentUrlParams = new URLSearchParams(window.location.search);
             var hostelId = currentUrlParams.get('hostel_id');
             if (hostelId) {

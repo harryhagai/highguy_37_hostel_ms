@@ -115,6 +115,24 @@ if ($adminTableExists($pdo, 'notices')) {
     }
 }
 
+if ($adminTableExists($pdo, 'contact_messages')) {
+    $newContactMessagesQuery = $adminColumnExists($pdo, 'contact_messages', 'status')
+        ? "SELECT COUNT(*) FROM contact_messages WHERE LOWER(COALESCE(status, 'new')) = 'new'"
+        : 'SELECT COUNT(*) FROM contact_messages';
+
+    $newContactMessages = (int)$pdo->query($newContactMessagesQuery)->fetchColumn();
+    if ($newContactMessages > 0) {
+        $adminNotifications[] = [
+            'icon' => 'bi bi-chat-left-text',
+            'tone' => 'primary',
+            'title' => $newContactMessages . ' new contact message' . ($newContactMessages === 1 ? '' : 's'),
+            'message' => 'Public users have submitted new contact form messages.',
+            'page' => 'contact_messages',
+        ];
+        $adminNotificationCount += $newContactMessages;
+    }
+}
+
 $adminNotifications = array_slice($adminNotifications, 0, 5);
 $adminNotificationBadge = $adminNotificationCount > 99 ? '99+' : (string)$adminNotificationCount;
 $hasAdminNotifications = !empty($adminNotifications) && $adminNotificationCount > 0;
@@ -128,6 +146,7 @@ $allowed = [
     'manage_beds' => 'manage_beds.php',
     'application_management' => 'application_management.php', // <-- Added!
     'notice' => 'notice.php',
+    'contact_messages' => 'contact_messages.php',
     'settings' => 'settings.php'
 ];
 
@@ -245,6 +264,7 @@ if ($isSpaRequest) {
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=manage_users" data-spa-page="manage_users" data-no-spinner="true">Manage users</a></li>
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=manage_rooms" data-spa-page="manage_rooms" data-no-spinner="true">Manage rooms</a></li>
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=manage_beds" data-spa-page="manage_beds" data-no-spinner="true">Manage beds</a></li>
+                <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=contact_messages" data-spa-page="contact_messages" data-no-spinner="true">Contact messages</a></li>
                 <li><a class="dropdown-item" href="admin_dashboard_layout.php?page=settings&settings_tab=payment" data-spa-page="settings" data-spa-query="settings_tab=payment" data-no-spinner="true">Payment settings</a></li>
             </ul>
         </div>
@@ -282,6 +302,7 @@ if ($isSpaRequest) {
                     <li><a href="admin_dashboard_layout.php?page=manage_beds" data-spa-page="manage_beds" data-no-spinner="true" class="<?= $page === 'manage_beds' ? 'active' : '' ?>"><i class="bi bi-grid-3x3-gap"></i> <span>Manage Beds</span></a></li>
                     <li><a href="admin_dashboard_layout.php?page=application_management" data-spa-page="application_management" data-no-spinner="true" class="<?= $page === 'application_management' ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i> <span>Application</span></a></li>
                     <li><a href="admin_dashboard_layout.php?page=notice" data-spa-page="notice" data-no-spinner="true" class="<?= $page === 'notice' ? 'active' : '' ?>"><i class="bi bi-megaphone"></i> <span>Notices</span></a></li>
+                    <li><a href="admin_dashboard_layout.php?page=contact_messages" data-spa-page="contact_messages" data-no-spinner="true" class="<?= $page === 'contact_messages' ? 'active' : '' ?>"><i class="bi bi-chat-left-text"></i> <span>Contact Messages</span></a></li>
                 </ul>
             </nav>
         </div>

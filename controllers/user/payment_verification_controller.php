@@ -198,7 +198,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
             if ($holdFrom === '' && !empty($booking['booking_date'])) {
                 $holdFrom = trim((string)$booking['booking_date']);
             }
-            $remaining = payment_seconds_remaining($holdFrom, $holdMinutes);
+            $remaining = payment_seconds_remaining_for_booking($pdo, (int)$booking['booking_id'], $holdMinutes);
+            if ($remaining === null) {
+                $remaining = payment_seconds_remaining($holdFrom, $holdMinutes);
+            }
 
             if (!payment_has_transaction($proof) && $remaining <= 0) {
                 payment_expire_unpaid_pending_bookings($pdo, $holdMinutes);
@@ -324,7 +327,10 @@ $secondsRemaining = 0;
 $requiresSubmission = false;
 
 if ($statusKey === 'pending' && !$hasTransaction) {
-    $secondsRemaining = payment_seconds_remaining($holdFrom, $holdMinutes);
+    $secondsRemaining = payment_seconds_remaining_for_booking($pdo, (int)$booking['booking_id'], $holdMinutes);
+    if ($secondsRemaining === null) {
+        $secondsRemaining = payment_seconds_remaining($holdFrom, $holdMinutes);
+    }
     $requiresSubmission = $secondsRemaining > 0;
 
     if ($secondsRemaining <= 0) {

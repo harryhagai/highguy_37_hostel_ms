@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     require __DIR__ . '/../../config/db_connection.php';
 }
+require_once __DIR__ . '/../../includes/contact_helpers.php';
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -32,7 +33,13 @@ if (!empty($_SESSION['contact_message_success'])) {
     unset($_SESSION['contact_message_success']);
 }
 
+$tableReady = contact_ensure_contact_messages_table($pdo);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'send_contact_message') {
+    if (!$tableReady) {
+        $errors[] = 'Contact message service is not ready. Please try again later.';
+    }
+
     $submittedToken = (string)($_POST['csrf_token'] ?? '');
     if ($submittedToken === '' || !hash_equals($_SESSION['csrf_token'], $submittedToken)) {
         $errors[] = 'Invalid CSRF token.';

@@ -193,7 +193,7 @@ $canSubmitBooking = !$existingBooking && $semesterReady && !empty($semesterOptio
                                 <input type="text" class="form-control" id="modalTotalPrice" readonly>
                             </div>
                         </div>
-                        <small class="text-muted d-block mt-2">
+                        <small class="text-danger d-block mt-2">
                             After confirming, you will be redirected to Payment Verification to submit your Transaction ID.
                         </small>
                     </div>

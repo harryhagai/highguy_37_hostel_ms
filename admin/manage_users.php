@@ -224,13 +224,6 @@ $supports = $state['supports'];
                             >
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <form method="post" data-confirm="Send password reset for this user?" class="d-inline">
-                                <input type="hidden" name="action" value="send_password_reset">
-                                <input type="hidden" name="id" value="<?= $userId ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-warning" data-bs-toggle-tooltip="tooltip" title="Send password reset email">
-                                    <i class="bi bi-key"></i>
-                                </button>
-                            </form>
                             <form method="post" data-confirm="Disable this user account?" class="d-inline">
                                 <input type="hidden" name="action" value="disable_user">
                                 <input type="hidden" name="id" value="<?= $userId ?>">

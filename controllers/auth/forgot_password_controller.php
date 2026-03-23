@@ -95,6 +95,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     auth_throttle_clear($pdo, 'forgot_password', $identifier);
+                    error_log(
+                        'Forgot password reset mail sent: user_id=' . (int)$user['id']
+                        . ', selector=' . (string)$tokenRow['selector']
+                        . ', expires_at=' . (string)$tokenRow['expires_at']
+                    );
                     $successMessage = 'A reset link has been sent to your email.';
                 }
             }

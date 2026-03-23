@@ -22,8 +22,10 @@ $publicHostelStats = $catalogState['stats'];
 $publicHostelLocationOptions = $catalogState['location_options'] ?? [];
 $publicHostelPriceOptions = $catalogState['price_options'] ?? [];
 $contactState = require __DIR__ . '/controllers/common/contact_messages_controller.php';
+$contactInformationState = require __DIR__ . '/controllers/common/contact_information_controller.php';
 $contactErrors = $contactState['errors'] ?? [];
 $contactSuccessMessage = $contactState['success_message'] ?? null;
+$contactInformation = $contactInformationState['contact_information'] ?? [];
 $contactForm = $contactState['form'] ?? [
     'name' => '',
     'email' => '',
@@ -32,6 +34,11 @@ $contactForm = $contactState['form'] ?? [
     'message' => '',
 ];
 $contactCsrfToken = (string)($contactState['csrf_token'] ?? '');
+$contactInfoPhone = trim((string)($contactInformation['phone'] ?? ''));
+$contactInfoEmail = trim((string)($contactInformation['email'] ?? ''));
+$contactInfoLocation = trim((string)($contactInformation['location'] ?? ''));
+$contactInfoWorkingHours = trim((string)($contactInformation['working_hours'] ?? ''));
+$contactInfoSupportNote = trim((string)($contactInformation['support_note'] ?? ''));
 $publicHostelsForModal = array_values(array_map(
     static function (array $hostel): array {
         return [
@@ -364,7 +371,7 @@ $publicHostelsForModal = array_values(array_map(
                                         <span class="public-hostel-price-badge">
                                             <i class="bi bi-cash-coin me-1"></i>
                                             <?php if ($priceDisplay !== null): ?>
-                                                From TSh <?= htmlspecialchars($priceDisplay, ENT_QUOTES, 'UTF-8') ?>/room
+                                                From TSh <?= htmlspecialchars($priceDisplay, ENT_QUOTES, 'UTF-8') ?>/Bed
                                             <?php else: ?>
                                                 Price on request
                                             <?php endif; ?>
@@ -569,7 +576,7 @@ $publicHostelsForModal = array_values(array_map(
                         <div class="contact-info-pane h-100">
                             <h3 class="contact-pane-title">Contact Information</h3>
                             <p class="contact-pane-copy">
-                                Talk to us anytime. Our team is ready to help you with hostel selection and booking support.
+                                <?= htmlspecialchars($contactInfoSupportNote !== '' ? $contactInfoSupportNote : 'Talk to us anytime. Our team is ready to help you with hostel selection and booking support.', ENT_QUOTES, 'UTF-8') ?>
                             </p>
 
                             <div class="contact-points">
@@ -577,7 +584,7 @@ $publicHostelsForModal = array_values(array_map(
                                     <span class="contact-point-icon"><i class="bi bi-telephone"></i></span>
                                     <div>
                                         <p class="contact-point-label mb-0">Call Us</p>
-                                        <p class="contact-point-value mb-0">+254 700 123456</p>
+                                        <p class="contact-point-value mb-0"><?= htmlspecialchars($contactInfoPhone !== '' ? $contactInfoPhone : '+254 700 123456', ENT_QUOTES, 'UTF-8') ?></p>
                                     </div>
                                 </div>
 
@@ -585,7 +592,7 @@ $publicHostelsForModal = array_values(array_map(
                                     <span class="contact-point-icon"><i class="bi bi-envelope"></i></span>
                                     <div>
                                         <p class="contact-point-label mb-0">Email</p>
-                                        <p class="contact-point-value mb-0">support@hostelpro.com</p>
+                                        <p class="contact-point-value mb-0"><?= htmlspecialchars($contactInfoEmail !== '' ? $contactInfoEmail : 'support@hostelpro.com', ENT_QUOTES, 'UTF-8') ?></p>
                                     </div>
                                 </div>
 
@@ -593,7 +600,7 @@ $publicHostelsForModal = array_values(array_map(
                                     <span class="contact-point-icon"><i class="bi bi-geo-alt"></i></span>
                                     <div>
                                         <p class="contact-point-label mb-0">Location</p>
-                                        <p class="contact-point-value mb-0">Nairobi, Kenya</p>
+                                        <p class="contact-point-value mb-0"><?= htmlspecialchars($contactInfoLocation !== '' ? $contactInfoLocation : 'Dar-es-saalam, Tanzania', ENT_QUOTES, 'UTF-8') ?></p>
                                     </div>
                                 </div>
 
@@ -601,7 +608,7 @@ $publicHostelsForModal = array_values(array_map(
                                     <span class="contact-point-icon"><i class="bi bi-clock"></i></span>
                                     <div>
                                         <p class="contact-point-label mb-0">Working Hours</p>
-                                        <p class="contact-point-value mb-0">Mon - Sat, 8:00 AM - 6:00 PM</p>
+                                        <p class="contact-point-value mb-0"><?= htmlspecialchars($contactInfoWorkingHours !== '' ? $contactInfoWorkingHours : 'Mon - Sat, 8:00 AM - 6:00 PM', ENT_QUOTES, 'UTF-8') ?></p>
                                     </div>
                                 </div>
                             </div>

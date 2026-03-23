@@ -28,16 +28,39 @@ $paymentSuccess = (string)($paymentState['success'] ?? '');
 $paymentTableReady = (bool)($paymentState['table_ready'] ?? false);
 $paymentControlNumbers = is_array($paymentState['control_numbers'] ?? null) ? $paymentState['control_numbers'] : [];
 
+$contactInformationState = require __DIR__ . '/../controllers/admin/contact_information_settings_controller.php';
+$contactInformationErrors = is_array($contactInformationState['errors'] ?? null) ? $contactInformationState['errors'] : [];
+$contactInformationSuccess = (string)($contactInformationState['success'] ?? '');
+$contactInformationTableReady = (bool)($contactInformationState['table_ready'] ?? false);
+$contactInformationRecords = is_array($contactInformationState['records'] ?? null) ? $contactInformationState['records'] : [];
+$contactInformationStats = is_array($contactInformationState['stats'] ?? null) ? $contactInformationState['stats'] : [
+    'total' => 0,
+    'active' => 0,
+    'inactive' => 0,
+];
+$contactInformationOpenModal = (string)($contactInformationState['open_modal'] ?? '');
+$contactInformationCreateDraft = is_array($contactInformationState['create_draft'] ?? null) ? $contactInformationState['create_draft'] : [
+    'phone' => '',
+    'email' => '',
+    'location' => '',
+    'working_hours' => '',
+    'support_note' => '',
+    'is_active' => 1,
+];
+$contactInformationEditDraft = is_array($contactInformationState['edit_draft'] ?? null) ? $contactInformationState['edit_draft'] : null;
+
 $requestedTab = strtolower(trim((string)($_GET['settings_tab'] ?? '')));
 if (($requestedTab === '' || $requestedTab === 'profile') && ((string)($_GET['page'] ?? '') === 'payment_settings')) {
     $requestedTab = 'payment';
 }
 
-if (!in_array($requestedTab, ['profile', 'semester', 'payment'], true)) {
+if (!in_array($requestedTab, ['profile', 'semester', 'payment', 'contact_info'], true)) {
     $requestedTab = 'profile';
 }
 
-if (!empty($paymentErrors) || $paymentSuccess !== '') {
+if (!empty($contactInformationErrors) || $contactInformationSuccess !== '') {
+    $activeTab = 'contact_info';
+} elseif (!empty($paymentErrors) || $paymentSuccess !== '') {
     $activeTab = 'payment';
 } elseif (!empty($semesterErrors) || $semesterSuccess !== '') {
     $activeTab = 'semester';
@@ -121,6 +144,11 @@ $toPaymentIconUrl = static function (?string $path): string {
             <li class="nav-item" role="presentation">
                 <button class="nav-link <?= $activeTab === 'payment' ? 'active' : '' ?>" id="settings-payment-tab" data-bs-toggle="tab" data-bs-target="#settings-payment-pane" type="button" role="tab" aria-controls="settings-payment-pane" aria-selected="<?= $activeTab === 'payment' ? 'true' : 'false' ?>">
                     <i class="bi bi-wallet2 me-1"></i>Payment Settings
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link <?= $activeTab === 'contact_info' ? 'active' : '' ?>" id="settings-contact-info-tab" data-bs-toggle="tab" data-bs-target="#settings-contact-info-pane" type="button" role="tab" aria-controls="settings-contact-info-pane" aria-selected="<?= $activeTab === 'contact_info' ? 'true' : 'false' ?>">
+                    <i class="bi bi-person-lines-fill me-1"></i>Contact Information
                 </button>
             </li>
         </ul>
@@ -397,6 +425,124 @@ $toPaymentIconUrl = static function (?string $path): string {
                     </div>
                 <?php endif; ?>
             </div>
+
+            <div class="tab-pane fade <?= $activeTab === 'contact_info' ? 'show active' : '' ?>" id="settings-contact-info-pane" role="tabpanel" aria-labelledby="settings-contact-info-tab">
+                <?php if (!empty($contactInformationErrors)): ?>
+                    <div class="alert alert-danger"><?= implode('<br>', array_map('htmlspecialchars', $contactInformationErrors)) ?></div>
+                <?php endif; ?>
+                <?php if ($contactInformationSuccess !== ''): ?>
+                    <div class="alert alert-success"><?= htmlspecialchars($contactInformationSuccess) ?></div>
+                <?php endif; ?>
+
+                <div class="users-quick-stats mb-3">
+                    <article class="users-mini-stat">
+                        <p class="users-mini-label mb-1">Total Records</p>
+                        <h5 class="mb-0"><?= (int)$contactInformationStats['total'] ?></h5>
+                    </article>
+                    <article class="users-mini-stat">
+                        <p class="users-mini-label mb-1">Active</p>
+                        <h5 class="mb-0"><?= (int)$contactInformationStats['active'] ?></h5>
+                    </article>
+                    <article class="users-mini-stat">
+                        <p class="users-mini-label mb-1">Inactive</p>
+                        <h5 class="mb-0"><?= (int)$contactInformationStats['inactive'] ?></h5>
+                    </article>
+                </div>
+
+                <div class="users-toolbar mb-3">
+                    <div>
+                        <h4 class="mb-1">Contact Information Management</h4>
+                        <p class="text-muted mb-0">Manage contact details shown in the public contact section on homepage.</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createContactInformationModal">
+                        <i class="bi bi-plus-circle me-1"></i>Add Contact Info
+                    </button>
+                </div>
+
+                <?php if (!$contactInformationTableReady): ?>
+                    <div class="alert alert-warning mb-0">
+                        contact_information table is not ready.
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Contact Details</th>
+                                    <th>Location & Hours</th>
+                                    <th>Status</th>
+                                    <th>Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($contactInformationRecords)): ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No contact information records found.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($contactInformationRecords as $contactInfo): ?>
+                                        <?php
+                                        $isActiveInfo = (int)($contactInfo['is_active'] ?? 0) === 1;
+                                        $contactInfoPayload = [
+                                            'id' => (int)($contactInfo['id'] ?? 0),
+                                            'phone' => (string)($contactInfo['phone'] ?? ''),
+                                            'email' => (string)($contactInfo['email'] ?? ''),
+                                            'location' => (string)($contactInfo['location'] ?? ''),
+                                            'working_hours' => (string)($contactInfo['working_hours'] ?? ''),
+                                            'support_note' => (string)($contactInfo['support_note'] ?? ''),
+                                            'is_active' => $isActiveInfo ? 1 : 0,
+                                        ];
+                                        $contactInfoJson = htmlspecialchars(json_encode($contactInfoPayload), ENT_QUOTES, 'UTF-8');
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold"><?= htmlspecialchars((string)($contactInfo['phone'] ?? '-')) ?></div>
+                                                <small class="text-muted d-block"><?= htmlspecialchars((string)($contactInfo['email'] ?? '-')) ?></small>
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold"><?= htmlspecialchars((string)($contactInfo['location'] ?? '-')) ?></div>
+                                                <small class="text-muted d-block"><?= htmlspecialchars((string)($contactInfo['working_hours'] ?? '-')) ?></small>
+                                                <small class="text-muted d-block"><?= htmlspecialchars((string)($contactInfo['support_note'] ?? '-')) ?></small>
+                                            </td>
+                                            <td>
+                                                <?= $isActiveInfo ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>' ?>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted d-block">Created: <?= htmlspecialchars((string)($contactInfo['created_at_display'] ?? '-')) ?></small>
+                                                <small class="text-muted d-block">Updated: <?= htmlspecialchars((string)($contactInfo['updated_at_display'] ?? '-')) ?></small>
+                                            </td>
+                                            <td class="settings-actions-cell">
+                                                <div class="settings-action-buttons">
+                                                    <?php if (!$isActiveInfo): ?>
+                                                        <form method="post" class="d-inline">
+                                                            <input type="hidden" name="action" value="activate_contact_information">
+                                                            <input type="hidden" name="id" value="<?= (int)($contactInfo['id'] ?? 0) ?>">
+                                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                                <i class="bi bi-check2-circle me-1"></i>Activate
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary edit-contact-information-btn" data-contact-info="<?= $contactInfoJson ?>" data-bs-toggle="modal" data-bs-target="#editContactInformationModal">
+                                                        <i class="bi bi-pencil-square me-1"></i>Edit
+                                                    </button>
+                                                    <form method="post" class="d-inline" data-confirm="Delete this contact information record?">
+                                                        <input type="hidden" name="action" value="delete_contact_information">
+                                                        <input type="hidden" name="id" value="<?= (int)($contactInfo['id'] ?? 0) ?>">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="bi bi-trash me-1"></i>Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     <?php endif; ?>
 </div>
@@ -616,6 +762,105 @@ $toPaymentIconUrl = static function (?string $path): string {
             </div>
         </form>
     </div>
+</div>
+
+<div class="modal fade" id="createContactInformationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="post" class="modal-content" autocomplete="off">
+            <input type="hidden" name="action" value="create_contact_information">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-1"></i>Add Contact Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Phone *</label>
+                        <input type="text" name="phone" class="form-control" required value="<?= htmlspecialchars((string)($contactInformationCreateDraft['phone'] ?? '')) ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email *</label>
+                        <input type="email" name="email" class="form-control" required value="<?= htmlspecialchars((string)($contactInformationCreateDraft['email'] ?? '')) ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Location *</label>
+                        <input type="text" name="location" class="form-control" required value="<?= htmlspecialchars((string)($contactInformationCreateDraft['location'] ?? '')) ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Working Hours *</label>
+                        <input type="text" name="working_hours" class="form-control" required value="<?= htmlspecialchars((string)($contactInformationCreateDraft['working_hours'] ?? '')) ?>">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Support Note</label>
+                        <textarea name="support_note" class="form-control" rows="3" placeholder="Short helper note visible in public contact section"><?= htmlspecialchars((string)($contactInformationCreateDraft['support_note'] ?? '')) ?></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createContactInformationActive" name="is_active" value="1" <?= (int)($contactInformationCreateDraft['is_active'] ?? 1) === 1 ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="createContactInformationActive">Set as active contact information</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check2-circle me-1"></i>Save</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="editContactInformationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="post" class="modal-content" autocomplete="off" id="editContactInformationForm">
+            <input type="hidden" name="action" value="update_contact_information">
+            <input type="hidden" name="id" id="editContactInformationId">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-1"></i>Edit Contact Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Phone *</label>
+                        <input type="text" name="phone" id="editContactInformationPhone" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email *</label>
+                        <input type="email" name="email" id="editContactInformationEmail" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Location *</label>
+                        <input type="text" name="location" id="editContactInformationLocation" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Working Hours *</label>
+                        <input type="text" name="working_hours" id="editContactInformationWorkingHours" class="form-control" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Support Note</label>
+                        <textarea name="support_note" id="editContactInformationSupportNote" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editContactInformationActive" name="is_active" value="1">
+                            <label class="form-check-label" for="editContactInformationActive">Set as active contact information</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-save me-1"></i>Save Changes</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div
+    id="contactInformationSettingsConfig"
+    data-open-modal="<?= htmlspecialchars($contactInformationOpenModal, ENT_QUOTES, 'UTF-8') ?>"
+    data-edit-draft="<?= htmlspecialchars(json_encode($contactInformationEditDraft), ENT_QUOTES, 'UTF-8') ?>">
 </div>
 
 <script>

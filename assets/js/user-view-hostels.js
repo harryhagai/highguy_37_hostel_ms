@@ -135,6 +135,7 @@
                     var hostelId = Number(hostel.id || 0);
                     if (hostelId > 0) {
                         selectRoomBtn.href = 'user_dashboard_layout.php?page=book_room&hostel_id=' + encodeURIComponent(hostelId);
+                        selectRoomBtn.setAttribute('data-spa-page', 'book_room');
                         selectRoomBtn.classList.remove('disabled');
                         selectRoomBtn.removeAttribute('aria-disabled');
                     } else {

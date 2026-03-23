@@ -22,11 +22,11 @@ if ($primaryBookingLabel === '') {
 }
 $roomMenuPage = (string)($shellState['room_menu_page'] ?? 'my_room');
 $roomMenuLabel = (string)($shellState['room_menu_label'] ?? 'My Room');
-if (!in_array($roomMenuPage, ['my_room', 'my_bed', 'view_hostels'], true)) {
+if (!in_array($roomMenuPage, ['my_room', 'view_hostels'], true)) {
     $roomMenuPage = 'my_room';
 }
 if ($roomMenuLabel === '') {
-    $roomMenuLabel = $roomMenuPage === 'my_bed' ? 'My Bed' : ($roomMenuPage === 'view_hostels' ? 'View Rooms' : 'My Room');
+    $roomMenuLabel = $roomMenuPage === 'view_hostels' ? 'View Rooms' : 'My Room';
 }
 
 $nameParts = preg_split('/\s+/', trim($displayUsername)) ?: [];
@@ -166,8 +166,8 @@ if ($isSpaRequest) {
                 <ul>
                     <li><a href="user_dashboard_layout.php?page=dashboard" data-spa-page="dashboard" data-no-spinner="true" class="<?= $page === 'dashboard' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i> <span>Dashboard</span></a></li>
                     <li><a href="user_dashboard_layout.php?page=view_hostels" data-spa-page="view_hostels" data-no-spinner="true" class="<?= $page === 'view_hostels' ? 'active' : '' ?>"><i class="bi bi-buildings"></i> <span>View Hostels</span></a></li>
+                    <li><a href="user_dashboard_layout.php?page=<?= htmlspecialchars($roomMenuPage) ?>" data-spa-page="<?= htmlspecialchars($roomMenuPage) ?>" data-no-spinner="true" class="<?= $page === $roomMenuPage ? 'active' : '' ?>"><i class="bi <?= $roomMenuPage === 'view_hostels' ? 'bi-buildings' : 'bi-house-heart' ?>"></i> <span><?= htmlspecialchars($roomMenuLabel) ?></span></a></li>
                     <li><a href="user_dashboard_layout.php?page=<?= htmlspecialchars($primaryBookingPage) ?>" data-spa-page="<?= htmlspecialchars($primaryBookingPage) ?>" data-no-spinner="true" class="<?= $page === $primaryBookingPage ? 'active' : '' ?>"><i class="bi <?= $primaryBookingPage === 'my_bed' ? 'bi-house-check' : 'bi-calendar-plus' ?>"></i> <span><?= htmlspecialchars($primaryBookingLabel) ?></span></a></li>
-                    <li><a href="user_dashboard_layout.php?page=<?= htmlspecialchars($roomMenuPage) ?>" data-spa-page="<?= htmlspecialchars($roomMenuPage) ?>" data-no-spinner="true" class="<?= $page === $roomMenuPage ? 'active' : '' ?>"><i class="bi <?= $roomMenuPage === 'my_bed' ? 'bi-house-check' : ($roomMenuPage === 'view_hostels' ? 'bi-buildings' : 'bi-house-heart') ?>"></i> <span><?= htmlspecialchars($roomMenuLabel) ?></span></a></li>
                     <li><a href="user_dashboard_layout.php?page=my_bookings" data-spa-page="my_bookings" data-no-spinner="true" class="<?= $page === 'my_bookings' ? 'active' : '' ?>"><i class="bi bi-journal-check"></i> <span>My Bookings</span></a></li>
                     <li><a href="user_dashboard_layout.php?page=notices" data-spa-page="notices" data-no-spinner="true" class="<?= $page === 'notices' ? 'active' : '' ?>"><i class="bi bi-megaphone"></i> <span>Notices</span></a></li>
                 </ul>

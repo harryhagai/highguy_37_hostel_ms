@@ -518,7 +518,7 @@ if (publicHostelsGrid) {
         }
         if (detailPriceElement) {
             detailPriceElement.textContent = hostel.starting_price !== null
-                ? `${formatPriceValue(hostel.starting_price)} / room`
+                ? `${formatPriceValue(hostel.starting_price)} / bed`
                 : "Price on request";
         }
         if (detailFreeRoomsElement) {
